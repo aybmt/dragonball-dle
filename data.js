@@ -1,6 +1,18 @@
 // =============================================
 //  DRAGON BALL DLE — Base de données personnages
 //
+//  CHAMPS :
+//  - name        : nom du personnage
+//  - sex         : Homme / Femme / Neutre
+//  - hair        : couleur de cheveux
+//  - origin      : "Planète, Univers X" (ex: "Terre, Univers 7")
+//  - race        : race / espèce
+//  - episode     : NUMBER — épisode de 1ère apparition tous animes/specials confondus
+//                  (1990 movies/specials approximés sur la timeline DBZ)
+//  - saga        : saga précise (ex: "Saga Cell", "Tournoi du Pouvoir")
+//  - serie       : "DB" / "DBZ" / "DBGT" / "DBS" — séries séparées par " / " si plusieurs
+//  - image       : chemin de l'image
+//
 //  👉 COMMENT AJOUTER UNE IMAGE :
 //     1. Télécharge l'image du personnage
 //     2. Renomme-la exactement comme indiqué dans image:
@@ -15,93 +27,93 @@ const CHARACTERS = [
 
   {
     name: "Goku",
-    sex: "Homme", race: "Saiyan", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DB / DBZ / GT / Super", transformation: true,
-    image: "images/goku.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Vegeta, Univers 7", race: "Saiyan",
+    episode: 1, saga: "Saga Pilaf", serie: "DB / DBZ / DBGT / DBS",
+    image: "images/goku.jpg"
   },
 
   {
     name: "Vegeta",
-    sex: "Homme", race: "Saiyan", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DBZ / GT / Super", transformation: true,
-    image: "images/vegeta.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Vegeta, Univers 7", race: "Saiyan",
+    episode: 5, saga: "Saga des Saiyans", serie: "DBZ / DBGT / DBS",
+    image: "images/vegeta.jpg"
   },
 
   {
     name: "Gohan",
-    sex: "Homme", race: "Demi-Saiyan", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DBZ / GT / Super", transformation: true,
-    image: "images/gohan.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Terre, Univers 7", race: "Demi-Saiyan",
+    episode: 1, saga: "Saga des Saiyans", serie: "DBZ / DBGT / DBS",
+    image: "images/gohan.jpg"
   },
 
   {
     name: "Goten",
-    sex: "Homme", race: "Demi-Saiyan", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DBZ / GT / Super", transformation: true,
-    image: "images/goten.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Terre, Univers 7", race: "Demi-Saiyan",
+    episode: 195, saga: "Saga Boo", serie: "DBZ / DBGT / DBS",
+    image: "images/goten.jpg"
   },
 
   {
     name: "Trunks (futur)",
-    sex: "Homme", race: "Demi-Saiyan", affiliation: "Z-Fighters",
-    hair: "Violet", status: "Vivant", saga: "DBZ / Super", transformation: true,
-    image: "images/trunks_futur.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Violet", origin: "Terre, Univers 7", race: "Demi-Saiyan",
+    episode: 122, saga: "Saga des Cyborgs", serie: "DBZ / DBS",
+    image: "images/trunks_futur.jpg"
   },
 
   {
     name: "Trunks (enfant)",
-    sex: "Homme", race: "Demi-Saiyan", affiliation: "Z-Fighters",
-    hair: "Violet", status: "Vivant", saga: "DBZ / GT / Super", transformation: true,
-    image: "images/trunks_enfant.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Violet", origin: "Terre, Univers 7", race: "Demi-Saiyan",
+    episode: 195, saga: "Saga Boo", serie: "DBZ / DBGT / DBS",
+    image: "images/trunks_enfant.jpg"
   },
 
   {
     name: "Pan",
-    sex: "Femme", race: "Quart Saiyan", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DBZ / GT / Super", transformation: false,
-    image: "images/pan.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Femme", hair: "Noir", origin: "Terre, Univers 7", race: "Quart Saiyan",
+    episode: 288, saga: "Saga Boo", serie: "DBZ / DBGT / DBS",
+    image: "images/pan.jpg"
   },
 
   {
     name: "Broly (Légendaire)",
-    sex: "Homme", race: "Saiyan", affiliation: "Neutre",
-    hair: "Noir", status: "Vivant", saga: "DBZ", transformation: true,
-    image: "images/broly_legendaire.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Vegeta, Univers 7", race: "Saiyan",
+    episode: 165, saga: "Films DBZ", serie: "DBZ",
+    image: "images/broly_legendaire.jpg"
   },
 
   {
     name: "Broly (DBS)",
-    sex: "Homme", race: "Saiyan", affiliation: "Neutre",
-    hair: "Noir", status: "Vivant", saga: "Super", transformation: true,
-    image: "images/broly_dbs.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Vampa, Univers 7", race: "Saiyan",
+    episode: 132, saga: "Saga Broly", serie: "DBS",
+    image: "images/broly_dbs.jpg"
   },
 
   {
     name: "Raditz",
-    sex: "Homme", race: "Saiyan", affiliation: "Ennemi",
-    hair: "Noir", status: "Mort", saga: "DBZ", transformation: false,
-    image: "images/raditz.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Vegeta, Univers 7", race: "Saiyan",
+    episode: 1, saga: "Saga des Saiyans", serie: "DBZ",
+    image: "images/raditz.jpg"
   },
 
   {
     name: "Nappa",
-    sex: "Homme", race: "Saiyan", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "DBZ", transformation: true,
-    image: "images/nappa.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Vegeta, Univers 7", race: "Saiyan",
+    episode: 5, saga: "Saga des Saiyans", serie: "DBZ",
+    image: "images/nappa.jpg"
   },
 
   {
     name: "Bardock",
-    sex: "Homme", race: "Saiyan", affiliation: "Neutre",
-    hair: "Noir", status: "Mort", saga: "DBZ", transformation: true,
-    image: "images/bardock.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Vegeta, Univers 7", race: "Saiyan",
+    episode: 40, saga: "TV Special Bardock", serie: "DBZ / DBS",
+    image: "images/bardock.jpg"
   },
 
   {
     name: "Turles",
-    sex: "Homme", race: "Saiyan", affiliation: "Ennemi",
-    hair: "Noir", status: "Mort", saga: "DBZ", transformation: true,
-    image: "images/turles.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Vegeta, Univers 7", race: "Saiyan",
+    episode: 50, saga: "Films DBZ", serie: "DBZ",
+    image: "images/turles.jpg"
   },
 
   // ════════════════════════════════════════
@@ -110,72 +122,72 @@ const CHARACTERS = [
 
   {
     name: "Krillin",
-    sex: "Homme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Chauve", status: "Vivant", saga: "DB / DBZ / GT / Super", transformation: false,
-    image: "images/krillin.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Terre, Univers 7", race: "Humain",
+    episode: 14, saga: "Saga Tournoi", serie: "DB / DBZ / DBGT / DBS",
+    image: "images/krillin.jpg"
   },
 
   {
     name: "Yamcha",
-    sex: "Homme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DB / DBZ / Super", transformation: false,
-    image: "images/yamcha.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Terre, Univers 7", race: "Humain",
+    episode: 7, saga: "Saga Pilaf", serie: "DB / DBZ / DBS",
+    image: "images/yamcha.jpg"
   },
 
   {
     name: "Tenshinhan",
-    sex: "Homme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Chauve", status: "Vivant", saga: "DB / DBZ / Super", transformation: false,
-    image: "images/tenshinhan.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Terre, Univers 7", race: "Humain",
+    episode: 75, saga: "Saga 22e Tenkaichi", serie: "DB / DBZ / DBS",
+    image: "images/tenshinhan.jpg"
   },
 
   {
     name: "Chaozu",
-    sex: "Homme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Chauve", status: "Vivant", saga: "DB / DBZ / Super", transformation: false,
-    image: "images/chaozu.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Terre, Univers 7", race: "Humain",
+    episode: 75, saga: "Saga 22e Tenkaichi", serie: "DB / DBZ / DBS",
+    image: "images/chaozu.jpg"
   },
 
   {
     name: "Maître Roshi",
-    sex: "Homme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Blanc", status: "Vivant", saga: "DB / DBZ / GT / Super", transformation: true,
-    image: "images/maitre_roshi.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Blanc", origin: "Terre, Univers 7", race: "Humain",
+    episode: 4, saga: "Saga Pilaf", serie: "DB / DBZ / DBGT / DBS",
+    image: "images/maitre_roshi.jpg"
   },
 
   {
     name: "Bulma",
-    sex: "Femme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Bleu", status: "Vivant", saga: "DB / DBZ / GT / Super", transformation: false,
-    image: "images/bulma.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Femme", hair: "Bleu", origin: "Terre, Univers 7", race: "Humain",
+    episode: 1, saga: "Saga Pilaf", serie: "DB / DBZ / DBGT / DBS",
+    image: "images/bulma.jpg"
   },
 
   {
     name: "Chi-Chi",
-    sex: "Femme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DB / DBZ / GT / Super", transformation: false,
-    image: "images/chi_chi.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Femme", hair: "Noir", origin: "Terre, Univers 7", race: "Humain",
+    episode: 6, saga: "Saga Pilaf", serie: "DB / DBZ / DBGT / DBS",
+    image: "images/chi_chi.jpg"
   },
 
   {
     name: "Videl",
-    sex: "Femme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DBZ / GT / Super", transformation: false,
-    image: "images/videl.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Femme", hair: "Noir", origin: "Terre, Univers 7", race: "Humain",
+    episode: 200, saga: "Saga Boo", serie: "DBZ / DBGT / DBS",
+    image: "images/videl.jpg"
   },
 
   {
     name: "Mr. Satan",
-    sex: "Homme", race: "Humain", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DBZ / GT / Super", transformation: false,
-    image: "images/mr_satan.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Terre, Univers 7", race: "Humain",
+    episode: 158, saga: "Saga Cell", serie: "DBZ / DBGT / DBS",
+    image: "images/mr_satan.jpg"
   },
 
   {
     name: "Launch",
-    sex: "Femme", race: "Humain", affiliation: "Neutre",
-    hair: "Blond", status: "Vivant", saga: "DB / DBZ", transformation: false,
-    image: "images/launch.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Femme", hair: "Blond", origin: "Terre, Univers 7", race: "Humain",
+    episode: 18, saga: "Saga Tournoi", serie: "DB / DBZ",
+    image: "images/launch.jpg"
   },
 
   // ════════════════════════════════════════
@@ -184,30 +196,30 @@ const CHARACTERS = [
 
   {
     name: "Piccolo",
-    sex: "Homme", race: "Namekien", affiliation: "Z-Fighters",
-    hair: "Chauve", status: "Vivant", saga: "DB / DBZ / GT / Super", transformation: true,
-    image: "images/piccolo.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Namek, Univers 7", race: "Namekien",
+    episode: 102, saga: "Saga Piccolo Daimaô", serie: "DB / DBZ / DBGT / DBS",
+    image: "images/piccolo.jpg"
   },
 
   {
     name: "Nail",
-    sex: "Homme", race: "Namekien", affiliation: "Namek",
-    hair: "Chauve", status: "Vivant", saga: "DBZ", transformation: false,
-    image: "images/nail.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Namek, Univers 7", race: "Namekien",
+    episode: 58, saga: "Saga Freezer", serie: "DBZ",
+    image: "images/nail.jpg"
   },
 
   {
     name: "Dende",
-    sex: "Homme", race: "Namekien", affiliation: "Z-Fighters",
-    hair: "Chauve", status: "Vivant", saga: "DBZ / GT / Super", transformation: false,
-    image: "images/dende.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Namek, Univers 7", race: "Namekien",
+    episode: 47, saga: "Saga Namek", serie: "DBZ / DBGT / DBS",
+    image: "images/dende.jpg"
   },
 
   {
     name: "Grand Guru",
-    sex: "Homme", race: "Namekien", affiliation: "Namek",
-    hair: "Chauve", status: "Mort", saga: "DBZ", transformation: false,
-    image: "images/grand_guru.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Namek, Univers 7", race: "Namekien",
+    episode: 53, saga: "Saga Namek", serie: "DBZ",
+    image: "images/grand_guru.jpg"
   },
 
   // ════════════════════════════════════════
@@ -216,23 +228,23 @@ const CHARACTERS = [
 
   {
     name: "Freezer",
-    sex: "Homme", race: "Race de Freezer", affiliation: "Ennemi",
-    hair: "Chauve", status: "Vivant", saga: "DBZ / GT / Super", transformation: true,
-    image: "images/freezer.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 7", race: "Race de Freezer",
+    episode: 44, saga: "Saga Freezer", serie: "DBZ / DBGT / DBS",
+    image: "images/freezer.jpg"
   },
 
   {
     name: "Cooler",
-    sex: "Homme", race: "Race de Freezer", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "DBZ", transformation: true,
-    image: "images/cooler.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 7", race: "Race de Freezer",
+    episode: 78, saga: "Films DBZ", serie: "DBZ",
+    image: "images/cooler.jpg"
   },
 
   {
     name: "King Cold",
-    sex: "Homme", race: "Race de Freezer", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "DBZ", transformation: false,
-    image: "images/king_cold.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 7", race: "Race de Freezer",
+    episode: 120, saga: "Saga Trunks", serie: "DBZ",
+    image: "images/king_cold.jpg"
   },
 
   // ════════════════════════════════════════
@@ -241,37 +253,37 @@ const CHARACTERS = [
 
   {
     name: "Androïde 17",
-    sex: "Homme", race: "Androïde", affiliation: "Z-Fighters",
-    hair: "Noir", status: "Vivant", saga: "DBZ / GT / Super", transformation: false,
-    image: "images/androide_17.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Terre, Univers 7", race: "Androïde",
+    episode: 135, saga: "Saga des Cyborgs", serie: "DBZ / DBGT / DBS",
+    image: "images/androide_17.jpg"
   },
 
   {
     name: "Androïde 18",
-    sex: "Femme", race: "Androïde", affiliation: "Z-Fighters",
-    hair: "Blond", status: "Vivant", saga: "DBZ / GT / Super", transformation: false,
-    image: "images/androide_18.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Femme", hair: "Blond", origin: "Terre, Univers 7", race: "Androïde",
+    episode: 135, saga: "Saga des Cyborgs", serie: "DBZ / DBGT / DBS",
+    image: "images/androide_18.jpg"
   },
 
   {
     name: "Androïde 16",
-    sex: "Homme", race: "Androïde", affiliation: "Neutre",
-    hair: "Rouge", status: "Mort", saga: "DBZ", transformation: false,
-    image: "images/androide_16.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Roux", origin: "Terre, Univers 7", race: "Androïde",
+    episode: 135, saga: "Saga des Cyborgs", serie: "DBZ",
+    image: "images/androide_16.jpg"
   },
 
   {
     name: "Androïde 20 (Dr Gero)",
-    sex: "Homme", race: "Androïde", affiliation: "Ennemi",
-    hair: "Blanc", status: "Mort", saga: "DBZ", transformation: false,
-    image: "images/androide_20_dr_gero.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Blanc", origin: "Terre, Univers 7", race: "Androïde",
+    episode: 132, saga: "Saga des Cyborgs", serie: "DBZ",
+    image: "images/androide_20_dr_gero.jpg"
   },
 
   {
     name: "Cell",
-    sex: "Homme", race: "Bio-Androïde", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "DBZ", transformation: true,
-    image: "images/cell.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Terre, Univers 7", race: "Bio-Androïde",
+    episode: 140, saga: "Saga Cell", serie: "DBZ",
+    image: "images/cell.jpg"
   },
 
   // ════════════════════════════════════════
@@ -280,23 +292,23 @@ const CHARACTERS = [
 
   {
     name: "Buu (Innocent)",
-    sex: "Homme", race: "Majin", affiliation: "Z-Fighters",
-    hair: "Chauve", status: "Vivant", saga: "DBZ / GT / Super", transformation: true,
-    image: "images/buu_innocent.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 7", race: "Majin",
+    episode: 232, saga: "Saga Boo", serie: "DBZ / DBGT / DBS",
+    image: "images/buu_innocent.jpg"
   },
 
   {
     name: "Buu (Super)",
-    sex: "Homme", race: "Majin", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "DBZ", transformation: true,
-    image: "images/buu_super.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 7", race: "Majin",
+    episode: 253, saga: "Saga Boo", serie: "DBZ",
+    image: "images/buu_super.jpg"
   },
 
   {
     name: "Babidi",
-    sex: "Homme", race: "Extraterrestre", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "DBZ", transformation: false,
-    image: "images/babidi.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 7", race: "Extraterrestre",
+    episode: 220, saga: "Saga Boo", serie: "DBZ",
+    image: "images/babidi.jpg"
   },
 
   // ════════════════════════════════════════
@@ -305,104 +317,104 @@ const CHARACTERS = [
 
   {
     name: "Beerus",
-    sex: "Homme", race: "Dieu Destruction", affiliation: "Divin",
-    hair: "Chauve", status: "Vivant", saga: "Super", transformation: false,
-    image: "images/beerus.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Monde de Beerus, Univers 7", race: "Dieu Destruction",
+    episode: 5, saga: "Saga Batailles des Dieux", serie: "DBS",
+    image: "images/beerus.jpg"
   },
 
   {
     name: "Whis",
-    sex: "Homme", race: "Ange", affiliation: "Divin",
-    hair: "Blanc", status: "Vivant", saga: "Super", transformation: false,
-    image: "images/whis.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Blanc", origin: "Monde de Beerus, Univers 7", race: "Ange",
+    episode: 5, saga: "Saga Batailles des Dieux", serie: "DBS",
+    image: "images/whis.jpg"
   },
 
   {
     name: "Zamasu",
-    sex: "Homme", race: "Kaïô-shin", affiliation: "Ennemi",
-    hair: "Blanc", status: "Mort", saga: "Super", transformation: true,
-    image: "images/zamasu.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Blanc", origin: "Monde des Kaïô, Univers 10", race: "Kaïô-shin",
+    episode: 55, saga: "Saga Trunks du Futur", serie: "DBS",
+    image: "images/zamasu.jpg"
   },
 
   {
     name: "Goku Black",
-    sex: "Homme", race: "Kaïô-shin / Saiyan", affiliation: "Ennemi",
-    hair: "Blanc", status: "Mort", saga: "Super", transformation: true,
-    image: "images/goku_black.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Monde des Kaïô, Univers 10", race: "Kaïô-shin / Saiyan",
+    episode: 47, saga: "Saga Trunks du Futur", serie: "DBS",
+    image: "images/goku_black.jpg"
   },
 
   {
     name: "Zeno",
-    sex: "Neutre", race: "Omni-Roi", affiliation: "Divin",
-    hair: "Chauve", status: "Vivant", saga: "Super", transformation: false,
-    image: "images/zeno.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Neutre", hair: "Chauve", origin: "Palais du Roi de Tout", race: "Omni-Roi",
+    episode: 41, saga: "Saga Univers 6", serie: "DBS",
+    image: "images/zeno.jpg"
   },
 
   {
     name: "Grand Prêtre",
-    sex: "Homme", race: "Ange", affiliation: "Divin",
-    hair: "Blanc", status: "Vivant", saga: "Super", transformation: false,
-    image: "images/grand_pretre.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Blanc", origin: "Palais du Roi de Tout", race: "Ange",
+    episode: 82, saga: "Tournoi du Pouvoir", serie: "DBS",
+    image: "images/grand_pretre.jpg"
   },
 
   {
     name: "Kaïô",
-    sex: "Homme", race: "Kaïô", affiliation: "Divin",
-    hair: "Chauve", status: "Mort", saga: "DB / DBZ / GT / Super", transformation: false,
-    image: "images/kaio.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Planète Kaïô, Univers 7", race: "Kaïô",
+    episode: 17, saga: "Saga des Saiyans", serie: "DBZ / DBGT / DBS",
+    image: "images/kaio.jpg"
   },
 
   {
     name: "Grand Kaïô-shin",
-    sex: "Homme", race: "Kaïô-shin", affiliation: "Divin",
-    hair: "Blanc", status: "Vivant", saga: "DBZ / Super", transformation: false,
-    image: "images/grand_kaio_shin.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Blanc", origin: "Monde des Kaïô, Univers 7", race: "Kaïô-shin",
+    episode: 212, saga: "Saga Boo", serie: "DBZ / DBS",
+    image: "images/grand_kaio_shin.jpg"
   },
 
   // ════════════════════════════════════════
-  //  TOURNOI DE LA PUISSANCE
+  //  TOURNOI DE LA PUISSANCE / UNIVERS 6
   // ════════════════════════════════════════
 
   {
     name: "Jiren",
-    sex: "Homme", race: "Humanoïde", affiliation: "Pride Troopers",
-    hair: "Chauve", status: "Vivant", saga: "Super", transformation: false,
-    image: "images/jiren.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 11", race: "Humanoïde",
+    episode: 85, saga: "Tournoi du Pouvoir", serie: "DBS",
+    image: "images/jiren.jpg"
   },
 
   {
     name: "Hit",
-    sex: "Homme", race: "Extraterrestre", affiliation: "Univers 6",
-    hair: "Chauve", status: "Vivant", saga: "Super", transformation: false,
-    image: "images/hit.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 6", race: "Extraterrestre",
+    episode: 38, saga: "Saga Univers 6", serie: "DBS",
+    image: "images/hit.jpg"
   },
 
   {
     name: "Caulifla",
-    sex: "Femme", race: "Saiyan", affiliation: "Univers 6",
-    hair: "Noir", status: "Vivant", saga: "Super", transformation: true,
-    image: "images/caulifla.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Femme", hair: "Noir", origin: "Sadala, Univers 6", race: "Saiyan",
+    episode: 88, saga: "Tournoi du Pouvoir", serie: "DBS",
+    image: "images/caulifla.jpg"
   },
 
   {
     name: "Kale",
-    sex: "Femme", race: "Saiyan", affiliation: "Univers 6",
-    hair: "Vert", status: "Vivant", saga: "Super", transformation: true,
-    image: "images/kale.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Femme", hair: "Vert", origin: "Sadala, Univers 6", race: "Saiyan",
+    episode: 89, saga: "Tournoi du Pouvoir", serie: "DBS",
+    image: "images/kale.jpg"
   },
 
   {
     name: "Cabba",
-    sex: "Homme", race: "Saiyan", affiliation: "Univers 6",
-    hair: "Noir", status: "Vivant", saga: "Super", transformation: true,
-    image: "images/cabba.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Sadala, Univers 6", race: "Saiyan",
+    episode: 34, saga: "Saga Univers 6", serie: "DBS",
+    image: "images/cabba.jpg"
   },
 
   {
     name: "Toppo",
-    sex: "Homme", race: "Humanoïde", affiliation: "Pride Troopers",
-    hair: "Chauve", status: "Vivant", saga: "Super", transformation: true,
-    image: "images/toppo.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Inconnue, Univers 11", race: "Humanoïde",
+    episode: 78, saga: "Tournoi du Pouvoir", serie: "DBS",
+    image: "images/toppo.jpg"
   },
 
   // ════════════════════════════════════════
@@ -411,23 +423,23 @@ const CHARACTERS = [
 
   {
     name: "Pilaf",
-    sex: "Homme", race: "Extraterrestre", affiliation: "Ennemi",
-    hair: "Chauve", status: "Vivant", saga: "DB / Super", transformation: false,
-    image: "images/pilaf.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Terre, Univers 7", race: "Extraterrestre",
+    episode: 9, saga: "Saga Pilaf", serie: "DB / DBS",
+    image: "images/pilaf.jpg"
   },
 
   {
     name: "Tao Pai Pai",
-    sex: "Homme", race: "Humain", affiliation: "Ennemi",
-    hair: "Blanc", status: "Vivant", saga: "DB / DBZ", transformation: false,
-    image: "images/tao_pai_pai.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Blanc", origin: "Terre, Univers 7", race: "Humain",
+    episode: 81, saga: "Saga Red Ribbon", serie: "DB / DBZ",
+    image: "images/tao_pai_pai.jpg"
   },
 
   {
     name: "Demon King Piccolo",
-    sex: "Homme", race: "Namekien", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "DB", transformation: true,
-    image: "images/demon_king_piccolo.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Terre, Univers 7", race: "Namekien",
+    episode: 102, saga: "Saga Piccolo Daimaô", serie: "DB",
+    image: "images/demon_king_piccolo.jpg"
   },
 
   // ════════════════════════════════════════
@@ -436,23 +448,23 @@ const CHARACTERS = [
 
   {
     name: "Baby",
-    sex: "Homme", race: "Tuffle", affiliation: "Ennemi",
-    hair: "Blanc", status: "Mort", saga: "GT", transformation: true,
-    image: "images/baby.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Blanc", origin: "Tuffle, Univers 7", race: "Tuffle",
+    episode: 16, saga: "Saga Baby", serie: "DBGT",
+    image: "images/baby.jpg"
   },
 
   {
     name: "Super 17",
-    sex: "Homme", race: "Androïde", affiliation: "Ennemi",
-    hair: "Noir", status: "Mort", saga: "GT", transformation: false,
-    image: "images/super_17.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Noir", origin: "Terre, Univers 7", race: "Androïde",
+    episode: 35, saga: "Saga Super 17", serie: "DBGT",
+    image: "images/super_17.jpg"
   },
 
   {
     name: "Omega Shenron",
-    sex: "Homme", race: "Dragon Noir", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "GT", transformation: true,
-    image: "images/omega_shenron.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Terre, Univers 7", race: "Dragon Noir",
+    episode: 59, saga: "Saga Dragons Maléfiques", serie: "DBGT",
+    image: "images/omega_shenron.jpg"
   },
 
   // ════════════════════════════════════════
@@ -461,30 +473,30 @@ const CHARACTERS = [
 
   {
     name: "Shenron",
-    sex: "Neutre", race: "Dragon", affiliation: "Neutre",
-    hair: "Aucun", status: "Vivant", saga: "DB / DBZ / GT / Super", transformation: false,
-    image: "images/shenron.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Neutre", hair: "Aucun", origin: "Terre, Univers 7", race: "Dragon",
+    episode: 11, saga: "Saga Pilaf", serie: "DB / DBZ / DBGT / DBS",
+    image: "images/shenron.jpg"
   },
 
   {
     name: "Oolong",
-    sex: "Homme", race: "Anthropomorphe", affiliation: "Z-Fighters",
-    hair: "Aucun", status: "Vivant", saga: "DB / DBZ / Super", transformation: true,
-    image: "images/oolong.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Aucun", origin: "Terre, Univers 7", race: "Anthropomorphe",
+    episode: 4, saga: "Saga Pilaf", serie: "DB / DBZ / DBS",
+    image: "images/oolong.jpg"
   },
 
   {
     name: "Garlic Jr.",
-    sex: "Homme", race: "Extraterrestre", affiliation: "Ennemi",
-    hair: "Chauve", status: "Vivant", saga: "DBZ", transformation: true,
-    image: "images/garlic_jr.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Terre Sacrée des Kaïô, Univers 7", race: "Extraterrestre",
+    episode: 1, saga: "Films DBZ", serie: "DBZ",
+    image: "images/garlic_jr.jpg"
   },
 
   {
     name: "Janemba",
-    sex: "Homme", race: "Démon", affiliation: "Ennemi",
-    hair: "Chauve", status: "Mort", saga: "DBZ", transformation: true,
-    image: "images/janemba.jpg"  // 👈 fichier à déposer dans images/
+    sex: "Homme", hair: "Chauve", origin: "Enfer, Univers 7", race: "Démon",
+    episode: 195, saga: "Films DBZ", serie: "DBZ",
+    image: "images/janemba.jpg"
   },
 
 ];

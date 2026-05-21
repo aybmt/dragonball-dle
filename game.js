@@ -3,13 +3,13 @@
 // =============================================
 
 const ATTRIBUTES = [
-  { key: "sex",            label: "Sexe" },
-  { key: "race",           label: "Race" },
-  { key: "affiliation",    label: "Affiliation" },
-  { key: "hair",           label: "Cheveux" },
-  { key: "status",         label: "Statut" },
-  { key: "saga",           label: "Saga" },
-  { key: "transformation", label: "Transformation" },
+  { key: "sex",     label: "Sexe",    type: "exact" },
+  { key: "hair",    label: "Cheveux", type: "exact" },
+  { key: "origin",  label: "Origine", type: "origin" },   // partial si même planète OU même univers
+  { key: "race",    label: "Race",    type: "exact" },
+  { key: "episode", label: "Épisode", type: "numeric" },  // dégradé direction + intensité
+  { key: "saga",    label: "Saga",    type: "exact" },
+  { key: "serie",   label: "Série",   type: "multi" },    // partial si au moins une série commune
 ];
 
 // ────────────────────────────────────────────
@@ -17,12 +17,11 @@ const ATTRIBUTES = [
 // ────────────────────────────────────────────
 const EASTER_EGG_NAME = "Lucas Latraube";
 
-// Normalise une chaîne pour comparaison robuste
 function normalize(str) {
   return str
     .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // enlève les accents
-    .replace(/\s+/g, " ")                              // espaces multiples → simple
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -30,7 +29,7 @@ function isEasterEgg(name) {
   return normalize(name) === normalize(EASTER_EGG_NAME);
 }
 
-// Personnage du jour (basé sur la date pour que tout le monde ait le même)
+// ── Personnage du jour ──
 function getDailyCharacter() {
   const today = new Date();
   const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
@@ -62,50 +61,36 @@ const easterPlayAgainBtn = document.getElementById("easter-play-again-btn");
 const hintBox     = document.getElementById("hint-box");
 const hintText    = document.getElementById("hint-text");
 
-// Legend modal
 const legendModal = document.getElementById("legend-modal");
 const legendClose = document.getElementById("legend-close");
 const legendStart = document.getElementById("legend-start");
 const helpBtn     = document.getElementById("help-btn");
 
-// Affiche le nombre total de personnages
 poolSpan.textContent = CHARACTERS.length;
 
-// ────────────────────────────────────────────
-//  MODALE LÉGENDE — première visite
-// ────────────────────────────────────────────
-const LEGEND_KEY = "dbdle_legend_seen";
+// ── Modale légende ──
+const LEGEND_KEY = "dbdle_legend_seen_v2"; // v2 = nouvelle légende avec dégradé
 
-function openLegend() {
-  legendModal.classList.remove("hidden");
-}
+function openLegend() { legendModal.classList.remove("hidden"); }
 function closeLegend() {
   legendModal.classList.add("hidden");
   try { localStorage.setItem(LEGEND_KEY, "1"); } catch (e) { /* ignore */ }
 }
 
-// Affichage automatique si jamais vue
 try {
   if (!localStorage.getItem(LEGEND_KEY)) openLegend();
-} catch (e) {
-  // localStorage indisponible (mode privé strict) — on ouvre quand même
-  openLegend();
-}
+} catch (e) { openLegend(); }
 
 legendClose.addEventListener("click", closeLegend);
 legendStart.addEventListener("click", closeLegend);
 helpBtn.addEventListener("click", openLegend);
 
-// Fermer en cliquant sur le fond
 legendModal.addEventListener("click", (e) => {
   if (e.target === legendModal) closeLegend();
 });
 
-// Esc pour fermer
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !legendModal.classList.contains("hidden")) {
-    closeLegend();
-  }
+  if (e.key === "Escape" && !legendModal.classList.contains("hidden")) closeLegend();
 });
 
 // ── Autocomplétion ──
@@ -156,7 +141,7 @@ function submitGuess() {
   const name = input.value.trim();
   if (!name) return;
 
-  // 🥚 EASTER EGG : si le joueur tape Lucas Latraube → victoire instantanée
+  // 🥚 EASTER EGG
   if (isEasterEgg(name)) {
     gameWon = true;
     input.value = "";
@@ -193,10 +178,7 @@ function submitGuess() {
     return;
   }
 
-  // Indice après 8 essais
-  if (guesses.length >= 8 && !hintShown) {
-    showHint();
-  }
+  if (guesses.length >= 8 && !hintShown) showHint();
 }
 
 function makePlaceholder() {
@@ -239,51 +221,127 @@ function renderGuessRow(character) {
 
   // Attributs comparés
   ATTRIBUTES.forEach((attr, i) => {
-    const cell = document.createElement("div");
-    cell.className = "cell";
+    const cell = buildCell(character, attr);
     cell.style.animationDelay = `${i * 100}ms`;
-
-    const result = compareAttr(character, target, attr.key);
-    cell.classList.add(result === "correct" ? "correct" : result === "partial" ? "partial" : "wrong");
-
-    let display;
-    if (attr.key === "transformation") {
-      display = character[attr.key] ? "Oui" : "Non";
-    } else {
-      display = character[attr.key];
-    }
-
-    const icon = result === "correct" ? "✅" : result === "partial" ? "🟡" : "❌";
-    cell.innerHTML = `<span class="cell-icon">${icon}</span><span class="cell-val">${display}</span>`;
     row.appendChild(cell);
   });
 
   guessesContainer.insertBefore(row, guessesContainer.firstChild);
-
-  // Animation d'entrée
   requestAnimationFrame(() => row.classList.add("revealed"));
 }
 
-// ── Comparaison d'attributs ──
-function compareAttr(guess, target, key) {
-  const gVal = guess[key];
-  const tVal = target[key];
+// ── Construit une cellule selon le type d'attribut ──
+function buildCell(character, attr) {
+  const cell = document.createElement("div");
+  cell.className = "cell";
 
-  if (key === "transformation") {
-    return gVal === tVal ? "correct" : "wrong";
+  const gVal = character[attr.key];
+  const tVal = target[attr.key];
+
+  if (attr.type === "numeric") {
+    // Épisode : dégradé direction + intensité
+    return buildNumericCell(cell, gVal, tVal);
   }
 
-  if (key === "saga") {
-    // Partiel si au moins une saga en commun
-    const gSagas = gVal.split("/").map(s => s.trim());
-    const tSagas = tVal.split("/").map(s => s.trim());
-    if (gVal === tVal) return "correct";
-    if (gSagas.some(s => tSagas.includes(s))) return "partial";
-    return "wrong";
+  if (attr.type === "multi") {
+    // Série : multi-valeurs
+    return buildMultiCell(cell, gVal, tVal);
   }
 
-  if (gVal === tVal) return "correct";
-  return "wrong";
+  if (attr.type === "origin") {
+    // Origine : "Planète, Univers X"
+    return buildOriginCell(cell, gVal, tVal);
+  }
+
+  // Exact (sex, hair, race, saga)
+  if (gVal === tVal) {
+    cell.classList.add("correct");
+    cell.innerHTML = `<span class="cell-icon">✅</span><span class="cell-val">${gVal}</span>`;
+  } else {
+    cell.classList.add("wrong");
+    cell.innerHTML = `<span class="cell-icon">❌</span><span class="cell-val">${gVal}</span>`;
+  }
+  return cell;
+}
+
+// ── Cellule numérique (épisode) avec dégradé direction + intensité ──
+function buildNumericCell(cell, gVal, tVal) {
+  if (gVal === tVal) {
+    cell.classList.add("correct");
+    cell.innerHTML = `<span class="cell-icon">✅</span><span class="cell-val">${gVal}</span>`;
+    return cell;
+  }
+
+  const diff = tVal - gVal; // >0 → vrai est plus haut, <0 → plus bas
+  const absDiff = Math.abs(diff);
+
+  // Intensité : plus l'écart est petit, plus le vert prend de place
+  // grad-stop : 10% (très loin) à 80% (très proche)
+  // Échelle basée sur la plage typique d'épisodes (0-300+)
+  let gradStop;
+  if (absDiff <= 5)        gradStop = 80;
+  else if (absDiff <= 15)  gradStop = 65;
+  else if (absDiff <= 30)  gradStop = 50;
+  else if (absDiff <= 60)  gradStop = 35;
+  else if (absDiff <= 120) gradStop = 20;
+  else                     gradStop = 10;
+
+  cell.style.setProperty("--grad-stop", gradStop + "%");
+
+  if (diff > 0) {
+    // Vrai est PLUS HAUT
+    cell.classList.add("gradient-up");
+    cell.innerHTML = `<span class="cell-arrow">↑</span><span class="cell-val">${gVal}</span>`;
+  } else {
+    // Vrai est PLUS BAS
+    cell.classList.add("gradient-down");
+    cell.innerHTML = `<span class="cell-arrow">↓</span><span class="cell-val">${gVal}</span>`;
+  }
+  return cell;
+}
+
+// ── Cellule multi-valeurs (série) ──
+function buildMultiCell(cell, gVal, tVal) {
+  if (gVal === tVal) {
+    cell.classList.add("correct");
+    cell.innerHTML = `<span class="cell-icon">✅</span><span class="cell-val">${gVal}</span>`;
+    return cell;
+  }
+  const gParts = gVal.split("/").map(s => s.trim());
+  const tParts = tVal.split("/").map(s => s.trim());
+  if (gParts.some(s => tParts.includes(s))) {
+    cell.classList.add("partial");
+    cell.innerHTML = `<span class="cell-icon">🟡</span><span class="cell-val">${gVal}</span>`;
+  } else {
+    cell.classList.add("wrong");
+    cell.innerHTML = `<span class="cell-icon">❌</span><span class="cell-val">${gVal}</span>`;
+  }
+  return cell;
+}
+
+// ── Cellule origine ("Planète, Univers X") ──
+function buildOriginCell(cell, gVal, tVal) {
+  if (gVal === tVal) {
+    cell.classList.add("correct");
+    cell.innerHTML = `<span class="cell-icon">✅</span><span class="cell-val">${gVal}</span>`;
+    return cell;
+  }
+
+  // Découpe en planète + univers
+  const gParts = gVal.split(",").map(s => s.trim());
+  const tParts = tVal.split(",").map(s => s.trim());
+
+  const samePlanet = gParts[0] && tParts[0] && gParts[0].toLowerCase() === tParts[0].toLowerCase();
+  const sameUniverse = gParts[1] && tParts[1] && gParts[1].toLowerCase() === tParts[1].toLowerCase();
+
+  if (samePlanet || sameUniverse) {
+    cell.classList.add("partial");
+    cell.innerHTML = `<span class="cell-icon">🟡</span><span class="cell-val">${gVal}</span>`;
+  } else {
+    cell.classList.add("wrong");
+    cell.innerHTML = `<span class="cell-icon">❌</span><span class="cell-val">${gVal}</span>`;
+  }
+  return cell;
 }
 
 // ── Indice après 8 essais ──
@@ -300,9 +358,7 @@ function showError(msg) {
   errorMsg.classList.remove("hidden");
   setTimeout(clearError, 3000);
 }
-function clearError() {
-  errorMsg.classList.add("hidden");
-}
+function clearError() { errorMsg.classList.add("hidden"); }
 
 // ── Victoire ──
 function showWin() {
@@ -312,7 +368,6 @@ function showWin() {
   launchKamehameha();
 }
 
-// ── Victoire EASTER EGG ──
 function showEasterWin() {
   easterScreen.classList.remove("hidden");
   launchEasterParticles();
@@ -343,7 +398,6 @@ function spawnParticle(emojis) {
 
 // ── Rejouer ──
 function resetGame() {
-  // En mode "rejouer" on prend un perso aléatoire (différent du précédent)
   const remaining = CHARACTERS.filter(c => c.name !== target.name);
   target = remaining[Math.floor(Math.random() * remaining.length)];
   guesses = [];

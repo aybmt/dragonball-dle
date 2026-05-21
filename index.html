@@ -19,7 +19,6 @@
     <div class="db db7">★★★★★★★</div>
   </div>
 
-  <!-- Bouton aide en haut à droite -->
   <button id="help-btn" class="help-btn" title="Voir la légende" aria-label="Voir la légende">?</button>
 
   <header>
@@ -57,17 +56,16 @@
     <div id="columns-header" class="columns-header hidden">
       <div class="col-label">Personnage</div>
       <div class="col-label">Sexe</div>
-      <div class="col-label">Race</div>
-      <div class="col-label">Affiliation</div>
       <div class="col-label">Cheveux</div>
-      <div class="col-label">Statut</div>
+      <div class="col-label">Origine</div>
+      <div class="col-label">Race</div>
+      <div class="col-label">Épisode</div>
       <div class="col-label">Saga</div>
-      <div class="col-label">Transformation</div>
+      <div class="col-label">Série</div>
     </div>
 
     <div id="guesses-container"></div>
 
-    <!-- Écran de victoire classique -->
     <div id="win-screen" class="win-screen hidden">
       <div class="win-content">
         <div class="win-aura"></div>
@@ -78,7 +76,6 @@
       </div>
     </div>
 
-    <!-- Écran de victoire EASTER EGG -->
     <div id="easter-screen" class="win-screen easter-screen hidden">
       <div class="win-content easter-content">
         <div class="easter-aura"></div>
@@ -101,7 +98,7 @@
         <h2>Comment jouer</h2>
       </div>
       <p class="legend-intro">
-        Devine le personnage mystère du jour ! À chaque essai, les cases t'indiquent à quel point tu es proche.
+        Devine le personnage mystère ! À chaque essai, les cases t'indiquent à quel point tu es proche.
       </p>
 
       <div class="legend-rules">
@@ -118,10 +115,10 @@
         <div class="legend-row">
           <div class="legend-cell-demo partial">
             <span class="cell-icon">🟡</span>
-            <span class="cell-val">DBZ / Super</span>
+            <span class="cell-val">DBZ / DBS</span>
           </div>
           <div class="legend-explain">
-            <strong>Jaune</strong> — <em>Partiellement correct</em>. S'applique uniquement à la saga : au moins une saga est commune.
+            <strong>Jaune</strong> — <em>Partiellement correct</em>. Pour la <em>Série</em> ou l'<em>Origine</em> : au moins un élément est commun.
           </div>
         </div>
 
@@ -132,6 +129,26 @@
           </div>
           <div class="legend-explain">
             <strong>Rouge</strong> — Attribut <em>différent</em> du personnage mystère.
+          </div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo gradient-up">
+            <span class="cell-arrow">↑</span>
+            <span class="cell-val">40</span>
+          </div>
+          <div class="legend-explain">
+            <strong>Dégradé ↑</strong> — Pour l'<em>Épisode</em>. Le vrai numéro est <em>plus haut</em>. Plus le vert domine, plus tu es proche.
+          </div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo gradient-down">
+            <span class="cell-arrow">↓</span>
+            <span class="cell-val">120</span>
+          </div>
+          <div class="legend-explain">
+            <strong>Dégradé ↓</strong> — Le vrai numéro est <em>plus bas</em>. Plus le vert domine, plus tu es proche.
           </div>
         </div>
       </div>

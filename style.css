@@ -12,8 +12,12 @@
   --gold:       #ffd200;
   --blue-aura:  #4fc3f7;
   --correct:    #2ecc71;
+  --correct-dark: #1a4a2e;
+  --correct-darker: #0d3320;
   --partial:    #f1c40f;
   --wrong:      #e74c3c;
+  --wrong-dark: #3d1010;
+  --wrong-darker: #2a0a0a;
   --legendary:  #b388ff;
   --text:       #f0e6ff;
   --text-muted: #8878aa;
@@ -178,7 +182,7 @@ h1 .dle {
 /* ── Main ── */
 main {
   position: relative; z-index: 10;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 10px 16px 60px;
 }
@@ -327,6 +331,7 @@ main {
 
 .cell {
   flex: 1;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -340,6 +345,7 @@ main {
   animation: flipIn 0.5s ease both;
   border: 2px solid transparent;
   min-height: 64px;
+  overflow: hidden;
 }
 
 @keyframes flipIn {
@@ -366,7 +372,7 @@ main {
   animation: none;
 }
 
-/* Conteneur image : taille fixe, même pour tous */
+/* Image cell */
 .cell-img-wrap {
   width: 56px;
   height: 56px;
@@ -393,8 +399,9 @@ main {
   font-size: 1.6rem;
 }
 
+/* États de comparaison standards */
 .cell.correct {
-  background: linear-gradient(135deg, #1a4a2e, #0d3320);
+  background: linear-gradient(135deg, var(--correct-dark), var(--correct-darker));
   border-color: var(--correct);
   color: #a0ffc0;
 }
@@ -404,13 +411,72 @@ main {
   color: #ffe57a;
 }
 .cell.wrong {
-  background: linear-gradient(135deg, #3d1010, #2a0a0a);
+  background: linear-gradient(135deg, var(--wrong-dark), var(--wrong-darker));
   border-color: var(--wrong);
   color: #ff9999;
 }
 
+/* ════════════════════════════════════════
+   DÉGRADÉ ÉPISODE — direction + intensité
+   La variable --grad-stop (0 à 100) contrôle où passe la transition.
+   Plus c'est proche du centre (50%), plus l'écart est grand.
+   Plus le vert occupe d'espace, plus tu es proche.
+   ════════════════════════════════════════ */
+
+.cell.gradient-up {
+  /* Vrai épisode est PLUS HAUT que la deviné : vert en haut, rouge en bas
+     --grad-stop = % du vert (plus grand = plus proche) */
+  background: linear-gradient(
+    to top,
+    var(--wrong-darker) 0%,
+    var(--wrong-dark) calc(50% - var(--grad-stop, 30%) / 2),
+    var(--correct-dark) calc(50% + var(--grad-stop, 30%) / 2),
+    var(--correct-darker) 100%
+  );
+  border-color: var(--gold);
+  color: #ffe9b0;
+  box-shadow: inset 0 0 12px #00000055;
+}
+
+.cell.gradient-down {
+  /* Vrai épisode est PLUS BAS : vert en bas, rouge en haut */
+  background: linear-gradient(
+    to bottom,
+    var(--wrong-darker) 0%,
+    var(--wrong-dark) calc(50% - var(--grad-stop, 30%) / 2),
+    var(--correct-dark) calc(50% + var(--grad-stop, 30%) / 2),
+    var(--correct-darker) 100%
+  );
+  border-color: var(--gold);
+  color: #ffe9b0;
+  box-shadow: inset 0 0 12px #00000055;
+}
+
+.cell-arrow {
+  font-size: 1.4rem;
+  line-height: 1;
+  font-weight: 900;
+  text-shadow: 0 0 8px #000, 0 2px 4px #000;
+  animation: bounceArrow 1.5s ease-in-out infinite;
+}
+
+@keyframes bounceArrow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+.cell.gradient-up .cell-arrow,
+.cell.gradient-down .cell-arrow {
+  color: #fff;
+}
+
 .cell-icon { font-size: 1.1rem; line-height: 1; }
-.cell-val  { line-height: 1.2; }
+.cell-val  {
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 3px #000a;
+}
 
 /* ── Win screen ── */
 .win-screen {
@@ -590,7 +656,7 @@ main {
   border: 2px solid var(--orange);
   border-radius: 20px;
   padding: 36px 32px 28px;
-  max-width: 520px;
+  max-width: 560px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -649,7 +715,7 @@ main {
 .legend-rules {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 18px;
 }
 
@@ -676,10 +742,10 @@ main {
   font-weight: 700;
   text-align: center;
   border: 2px solid transparent;
-  min-height: 62px;
+  min-height: 64px;
 }
 .legend-cell-demo.correct {
-  background: linear-gradient(135deg, #1a4a2e, #0d3320);
+  background: linear-gradient(135deg, var(--correct-dark), var(--correct-darker));
   border-color: var(--correct);
   color: #a0ffc0;
 }
@@ -689,15 +755,46 @@ main {
   color: #ffe57a;
 }
 .legend-cell-demo.wrong {
-  background: linear-gradient(135deg, #3d1010, #2a0a0a);
+  background: linear-gradient(135deg, var(--wrong-dark), var(--wrong-darker));
   border-color: var(--wrong);
   color: #ff9999;
+}
+.legend-cell-demo.gradient-up {
+  background: linear-gradient(
+    to top,
+    var(--wrong-darker) 0%,
+    var(--wrong-dark) 30%,
+    var(--correct-dark) 70%,
+    var(--correct-darker) 100%
+  );
+  border-color: var(--gold);
+  color: #ffe9b0;
+}
+.legend-cell-demo.gradient-down {
+  background: linear-gradient(
+    to bottom,
+    var(--wrong-darker) 0%,
+    var(--wrong-dark) 30%,
+    var(--correct-dark) 70%,
+    var(--correct-darker) 100%
+  );
+  border-color: var(--gold);
+  color: #ffe9b0;
+}
+.legend-cell-demo .cell-arrow {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-shadow: 0 0 8px #000, 0 2px 4px #000;
+  color: #fff;
+}
+.legend-cell-demo .cell-val {
+  text-shadow: 0 1px 3px #000a;
 }
 
 .legend-explain {
   flex: 1;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.88rem;
+  line-height: 1.45;
   color: var(--text);
 }
 .legend-explain strong { color: var(--gold); }
@@ -745,17 +842,19 @@ footer {
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
-  .cell { font-size: 0.65rem; padding: 8px 3px; min-height: 56px; }
-  .cell-name { font-size: 0.68rem; }
+  .cell { font-size: 0.6rem; padding: 8px 2px; min-height: 56px; }
+  .cell-name { font-size: 0.62rem; }
   .cell-icon { font-size: 0.9rem; }
-  .col-label { font-size: 0.6rem; }
+  .cell-arrow { font-size: 1.1rem; }
+  .col-label { font-size: 0.55rem; letter-spacing: 0.5px; }
   #guess-btn { padding: 12px 16px; font-size: 1rem; }
-  .guess-row { gap: 4px; }
+  .guess-row { gap: 3px; }
+  .columns-header { gap: 3px; }
   .help-btn { width: 38px; height: 38px; font-size: 1.2rem; top: 12px; right: 12px; }
   .legend-content { padding: 28px 20px 22px; }
   .legend-header h2 { font-size: 1.6rem; }
   .legend-cell-demo { width: 76px; font-size: 0.7rem; }
-  .legend-explain { font-size: 0.82rem; }
+  .legend-explain { font-size: 0.8rem; }
   .win-content { padding: 36px 28px; }
   .win-content h2 { font-size: 2.2rem; }
   .easter-title { font-size: 2.4rem !important; }
