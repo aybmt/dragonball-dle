@@ -1,5 +1,5 @@
 // =============================================
-//  DRAGON BALL DLE — Logique de jeu (Scouter Edition)
+//  DRAGON BALL DLE — Logique de jeu
 // =============================================
 
 const ATTRIBUTES = [
@@ -48,18 +48,15 @@ const triesSpan   = document.getElementById("tries");
 const poolSpan    = document.getElementById("pool-count");
 const columnsHeader = document.getElementById("columns-header");
 const errorMsg    = document.getElementById("error-msg");
-const errorText   = document.getElementById("error-text");
 const winScreen   = document.getElementById("win-screen");
 const winName     = document.getElementById("win-name");
 const winTries    = document.getElementById("win-tries");
-const winPower    = document.getElementById("win-power");
 const playAgainBtn = document.getElementById("play-again-btn");
 const easterScreen = document.getElementById("easter-screen");
 const easterTargetName = document.getElementById("easter-target-name");
 const easterPlayAgainBtn = document.getElementById("easter-play-again-btn");
 const hintBox     = document.getElementById("hint-box");
 const hintText    = document.getElementById("hint-text");
-const dragonBalls = document.getElementById("dragon-balls");
 
 const legendModal = document.getElementById("legend-modal");
 const legendClose = document.getElementById("legend-close");
@@ -69,7 +66,7 @@ const helpBtn     = document.getElementById("help-btn");
 poolSpan.textContent = CHARACTERS.length;
 
 // ── Modale légende ──
-const LEGEND_KEY = "dbdle_legend_seen_scouter";
+const LEGEND_KEY = "dbdle_legend_sober";
 
 function openLegend() { legendModal.classList.remove("hidden"); }
 function closeLegend() {
@@ -92,22 +89,6 @@ legendModal.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !legendModal.classList.contains("hidden")) closeLegend();
 });
-
-// ── Mise à jour des 7 boules de cristal ──
-// Elles s'allument une par une selon le nombre d'essais (max 7 affichées)
-function updateDragonBalls() {
-  const balls = dragonBalls.querySelectorAll(".db");
-  balls.forEach((ball, idx) => {
-    if (idx < guesses.length && idx < 7) {
-      if (!ball.classList.contains("lit")) {
-        // animation de pop seulement à l'apparition
-        ball.classList.add("lit");
-      }
-    } else {
-      ball.classList.remove("lit");
-    }
-  });
-}
 
 // ── Autocomplétion ──
 input.addEventListener("input", () => {
@@ -157,7 +138,7 @@ function submitGuess() {
   const name = input.value.trim();
   if (!name) return;
 
-  // 🥚 Easter egg
+  // Easter egg
   if (isEasterEgg(name)) {
     gameWon = true;
     input.value = "";
@@ -169,11 +150,11 @@ function submitGuess() {
 
   const character = CHARACTERS.find(c => c.name.toLowerCase() === name.toLowerCase());
   if (!character) {
-    showError("TARGET NOT FOUND");
+    showError("Personnage introuvable !");
     return;
   }
   if (guessedNames.has(character.name)) {
-    showError("ALREADY SCANNED");
+    showError("Déjà essayé !");
     return;
   }
 
@@ -181,7 +162,6 @@ function submitGuess() {
   guessedNames.add(character.name);
   guesses.push(character);
   triesSpan.textContent = guesses.length;
-  updateDragonBalls();
 
   columnsHeader.classList.remove("hidden");
   renderGuessRow(character);
@@ -191,7 +171,7 @@ function submitGuess() {
 
   if (character.name === target.name) {
     gameWon = true;
-    setTimeout(showWin, 800);
+    setTimeout(showWin, 600);
     return;
   }
 
@@ -209,7 +189,6 @@ function renderGuessRow(character) {
   const row = document.createElement("div");
   row.className = "guess-row";
 
-  // Nom + image
   const nameCell = document.createElement("div");
   nameCell.className = "cell cell-name";
 
@@ -237,7 +216,7 @@ function renderGuessRow(character) {
 
   ATTRIBUTES.forEach((attr, i) => {
     const cell = buildCell(character, attr);
-    cell.style.animationDelay = `${i * 110}ms`;
+    cell.style.animationDelay = `${i * 80}ms`;
     row.appendChild(cell);
   });
 
@@ -256,12 +235,8 @@ function buildCell(character, attr) {
   if (attr.type === "saga")      return buildSagaCell(cell, gVal, tVal);
   if (attr.type === "multi")     return buildMultiCell(cell, gVal, tVal);
 
-  // exact
-  if (gVal === tVal) {
-    cell.classList.add("correct");
-  } else {
-    cell.classList.add("wrong");
-  }
+  if (gVal === tVal) cell.classList.add("correct");
+  else               cell.classList.add("wrong");
   cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   return cell;
 }
@@ -275,7 +250,6 @@ function computeGradStop(absDiff, scale) {
     else if (absDiff <= 100) return 25;
     else                     return 12;
   }
-  // saga
   if (absDiff <= 1) return 85;
   if (absDiff <= 2) return 70;
   if (absDiff <= 4) return 55;
@@ -342,75 +316,32 @@ function buildMultiCell(cell, gVal, tVal) {
   return cell;
 }
 
-// ── Indice après 8 essais ──
+// ── Indice ──
 function showHint() {
   hintShown = true;
   const firstLetter = target.name.charAt(0).toUpperCase();
-  hintText.textContent = `Target name starts with « ${firstLetter} »`;
+  hintText.textContent = `Le nom commence par « ${firstLetter} »`;
   hintBox.classList.remove("hidden");
 }
 
 // ── Erreur ──
 function showError(msg) {
-  errorText.textContent = msg;
+  errorMsg.textContent = msg;
   errorMsg.classList.remove("hidden");
-  // Restart shake animation
-  errorMsg.style.animation = "none";
-  void errorMsg.offsetWidth;
-  errorMsg.style.animation = "";
-  setTimeout(clearError, 3000);
+  setTimeout(clearError, 2500);
 }
 function clearError() { errorMsg.classList.add("hidden"); }
-
-// ── Calcule un "power level" fictif pour le screen victoire (clin d'œil DBZ) ──
-function computePowerLevel(tries) {
-  // Moins d'essais = power level plus élevé
-  // 1 essai → 9001, 10 essais → ~3000
-  const base = Math.max(1000, Math.floor(9001 - (tries - 1) * 600 + Math.random() * 400));
-  return base.toLocaleString("en-US");
-}
 
 // ── Victoire ──
 function showWin() {
   winName.textContent = target.name;
   winTries.textContent = guesses.length;
-  winPower.textContent = computePowerLevel(guesses.length);
   winScreen.classList.remove("hidden");
-  launchParticles("gold");
 }
 
 function showEasterWin() {
   easterTargetName.textContent = target.name;
   easterScreen.classList.remove("hidden");
-  launchParticles("silver");
-}
-
-function launchParticles(theme) {
-  let symbols, klass;
-  if (theme === "silver") {
-    symbols = ["★", "✦", "◆", "▲", "✧", "✺"];
-    klass = "silver";
-  } else if (theme === "gold") {
-    symbols = ["★", "✦", "◆", "9000+", "OVER", "✧"];
-    klass = "gold";
-  } else {
-    symbols = ["★", "✦", "◆", "▲"];
-    klass = "";
-  }
-  for (let i = 0; i < 35; i++) {
-    setTimeout(() => spawnParticle(symbols, klass), i * 55);
-  }
-}
-
-function spawnParticle(symbols, klass) {
-  const p = document.createElement("div");
-  p.className = "particle" + (klass ? " " + klass : "");
-  p.style.left = Math.random() * 100 + "vw";
-  p.style.animationDuration = (1 + Math.random() * 1.2) + "s";
-  p.style.fontSize = (14 + Math.random() * 22) + "px";
-  p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-  document.body.appendChild(p);
-  setTimeout(() => p.remove(), 2800);
 }
 
 // ── Rejouer ──
@@ -427,12 +358,8 @@ function resetGame() {
   hintBox.classList.add("hidden");
   winScreen.classList.add("hidden");
   easterScreen.classList.add("hidden");
-  updateDragonBalls();
   input.focus();
 }
 
 playAgainBtn.addEventListener("click", resetGame);
 easterPlayAgainBtn.addEventListener("click", resetGame);
-
-// Initial state des Dragon Balls
-updateDragonBalls();
