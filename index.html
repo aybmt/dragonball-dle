@@ -5,51 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dragon Ball DLE</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Zen+Antique&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div class="stars"></div>
-  <div class="dragon-balls-bg">
-    <div class="db db1">★</div>
-    <div class="db db2">★★</div>
-    <div class="db db3">★★★</div>
-    <div class="db db4">★★★★</div>
-    <div class="db db5">★★★★★</div>
-    <div class="db db6">★★★★★★</div>
-    <div class="db db7">★★★★★★★</div>
+  <!-- Texture papier + grain -->
+  <div class="paper-grain" aria-hidden="true"></div>
+
+  <!-- Onomatopées japonaises décoratives en arrière-plan -->
+  <div class="onomatopoeias" aria-hidden="true">
+    <span class="ono ono-1">ドン</span>
+    <span class="ono ono-2">バン</span>
+    <span class="ono ono-3">ゴゴゴ</span>
+    <span class="ono ono-4">クッ</span>
+    <span class="ono ono-5">カッ</span>
   </div>
+
+  <!-- Speedlines SVG décoratives (coin haut-gauche) -->
+  <svg class="speedlines speedlines-top" viewBox="0 0 200 200" aria-hidden="true">
+    <g stroke="black" stroke-width="2" fill="none">
+      <line x1="0" y1="0" x2="120" y2="60" />
+      <line x1="0" y1="20" x2="100" y2="80" />
+      <line x1="0" y1="40" x2="80" y2="90" />
+      <line x1="0" y1="60" x2="60" y2="100" />
+      <line x1="20" y1="0" x2="100" y2="40" />
+      <line x1="40" y1="0" x2="110" y2="50" />
+      <line x1="60" y1="0" x2="130" y2="40" />
+    </g>
+  </svg>
 
   <button id="help-btn" class="help-btn" title="Voir la légende" aria-label="Voir la légende">?</button>
 
   <header>
-    <div class="logo-wrap">
-      <span class="logo-dragon">🐉</span>
-      <h1>Dragon Ball <span class="dle">DLE</span></h1>
+    <div class="title-panel">
+      <h1>
+        <span class="title-main">DRAGON BALL</span>
+        <span class="title-sub">DLE</span>
+      </h1>
+      <p class="subtitle">第1話 — Devine le personnage mystère</p>
     </div>
-    <p class="subtitle">Devine le personnage mystère !</p>
+
     <div class="header-stats">
-      <div class="tries-counter">
-        Essais : <span id="tries">0</span>
+      <div class="stat-tag">
+        <span class="stat-label">ESSAIS</span>
+        <span class="stat-value" id="tries">0</span>
       </div>
-      <div class="tries-counter">
-        Personnages : <span id="pool-count">0</span>
+      <div class="stat-tag">
+        <span class="stat-label">PERSOS</span>
+        <span class="stat-value" id="pool-count">0</span>
       </div>
     </div>
   </header>
 
   <main>
-    <div class="search-wrap">
+    <div class="search-panel">
       <div class="search-box">
-        <input type="text" id="search-input" placeholder="Tape un nom de personnage..." autocomplete="off" />
+        <input type="text" id="search-input" placeholder="Nom du personnage..." autocomplete="off" />
         <div id="suggestions" class="suggestions hidden"></div>
       </div>
-      <button id="guess-btn">Deviner</button>
+      <button id="guess-btn">
+        <span>GO</span>
+      </button>
     </div>
 
     <div id="error-msg" class="error-msg hidden"></div>
 
     <div id="hint-box" class="hint-box hidden">
-      <span class="hint-icon">💡</span>
+      <span class="hint-label">INDICE</span>
       <span id="hint-text"></span>
     </div>
 
@@ -66,103 +89,119 @@
 
     <div id="guesses-container"></div>
 
-    <div id="win-screen" class="win-screen hidden">
-      <div class="win-content">
-        <div class="win-aura"></div>
-        <div class="win-emoji">🌟</div>
-        <h2>Kamehameha !</h2>
-        <p>Tu as trouvé <strong id="win-name"></strong> en <strong><span id="win-tries"></span> essai(s)</strong> !</p>
-        <button id="play-again-btn">Rejouer</button>
+    <!-- Écran victoire classique -->
+    <div id="win-screen" class="overlay hidden">
+      <div class="win-panel">
+        <div class="win-corners">
+          <span class="corner tl"></span><span class="corner tr"></span>
+          <span class="corner bl"></span><span class="corner br"></span>
+        </div>
+        <p class="win-kanji">勝利</p>
+        <h2>KAMEHAMEHA !</h2>
+        <p class="win-text">
+          Tu as trouvé <strong id="win-name"></strong><br>
+          en <strong><span id="win-tries"></span> essai(s)</strong> !
+        </p>
+        <button id="play-again-btn" class="btn-primary">REJOUER</button>
       </div>
     </div>
 
-    <div id="easter-screen" class="win-screen easter-screen hidden">
-      <div class="win-content easter-content">
-        <div class="easter-aura"></div>
-        <div class="win-emoji">👑</div>
-        <h2 class="easter-title">LEGENDE !</h2>
-        <p class="easter-tag">EASTER EGG TROUVÉ</p>
-        <p>Tu as invoqué le légendaire <strong>Lucas Latraube</strong>,<br>maître ultime du Dragon Ball DLE.</p>
-        <p class="easter-subline">Victoire instantanée 🐲</p>
-        <button id="easter-play-again-btn">Rejouer</button>
+    <!-- Écran victoire EASTER EGG -->
+    <div id="easter-screen" class="overlay hidden">
+      <div class="win-panel easter-panel">
+        <div class="win-corners">
+          <span class="corner tl"></span><span class="corner tr"></span>
+          <span class="corner bl"></span><span class="corner br"></span>
+        </div>
+        <p class="win-kanji">伝説</p>
+        <h2 class="easter-title">LÉGENDE</h2>
+        <p class="easter-tag">EASTER EGG</p>
+        <p class="win-text">
+          Tu as invoqué <strong>Lucas Latraube</strong>,<br>
+          maître ultime du Dragon Ball DLE.
+        </p>
+        <p class="easter-target">
+          Le personnage à deviner était <strong id="easter-target-name"></strong>
+        </p>
+        <button id="easter-play-again-btn" class="btn-primary">REJOUER</button>
       </div>
     </div>
   </main>
 
   <!-- Modale légende -->
-  <div id="legend-modal" class="legend-modal hidden">
-    <div class="legend-content">
-      <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
-      <div class="legend-header">
-        <span class="legend-emoji">🐉</span>
-        <h2>Comment jouer</h2>
+  <div id="legend-modal" class="overlay hidden">
+    <div class="legend-panel">
+      <div class="win-corners">
+        <span class="corner tl"></span><span class="corner tr"></span>
+        <span class="corner bl"></span><span class="corner br"></span>
       </div>
+      <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
+
+      <p class="legend-kanji">説明</p>
+      <h2>COMMENT JOUER</h2>
       <p class="legend-intro">
-        Devine le personnage mystère ! À chaque essai, les cases t'indiquent à quel point tu es proche.
+        Devine le personnage mystère. Chaque essai révèle des indices via les couleurs des cases.
       </p>
 
       <div class="legend-rules">
         <div class="legend-row">
           <div class="legend-cell-demo correct">
-            <span class="cell-icon">✅</span>
             <span class="cell-val">Saiyan</span>
           </div>
           <div class="legend-explain">
-            <strong>Vert</strong> — Attribut <em>identique</em> au personnage mystère.
+            <strong>Identique</strong> — Attribut exact du personnage mystère.
           </div>
         </div>
 
         <div class="legend-row">
           <div class="legend-cell-demo partial">
-            <span class="cell-icon">🟡</span>
             <span class="cell-val">DBZ / DBS</span>
           </div>
           <div class="legend-explain">
-            <strong>Jaune</strong> — <em>Partiellement correct</em>. Pour la <em>Série</em> ou l'<em>Origine</em> : au moins un élément est commun.
+            <strong>Partiel</strong> — Au moins une valeur en commun. Concerne la <em>Série</em>.
           </div>
         </div>
 
         <div class="legend-row">
           <div class="legend-cell-demo wrong">
-            <span class="cell-icon">❌</span>
             <span class="cell-val">Humain</span>
           </div>
           <div class="legend-explain">
-            <strong>Rouge</strong> — Attribut <em>différent</em> du personnage mystère.
+            <strong>Différent</strong> — Aucun rapport avec le mystère.
           </div>
         </div>
 
         <div class="legend-row">
           <div class="legend-cell-demo gradient-up">
-            <span class="cell-arrow">↑</span>
+            <span class="cell-arrow">▲</span>
             <span class="cell-val">40</span>
           </div>
           <div class="legend-explain">
-            <strong>Dégradé ↑</strong> — Pour l'<em>Épisode</em>. Le vrai numéro est <em>plus haut</em>. Plus le vert domine, plus tu es proche.
+            <strong>Plus haut ▲</strong> — Pour <em>Épisode</em> &amp; <em>Saga</em>. La vraie valeur est <strong>plus tardive</strong>. Plus la zone claire est grande, plus tu es proche.
           </div>
         </div>
 
         <div class="legend-row">
           <div class="legend-cell-demo gradient-down">
-            <span class="cell-arrow">↓</span>
+            <span class="cell-arrow">▼</span>
             <span class="cell-val">120</span>
           </div>
           <div class="legend-explain">
-            <strong>Dégradé ↓</strong> — Le vrai numéro est <em>plus bas</em>. Plus le vert domine, plus tu es proche.
+            <strong>Plus bas ▼</strong> — La vraie valeur est <strong>plus précoce</strong>.
           </div>
         </div>
       </div>
 
-      <div class="legend-tips">
-        <p>💡 Astuce : commence avec un personnage emblématique pour avoir un maximum d'indices.</p>
+      <div class="legend-tip">
+        Astuce — commence par un personnage emblématique pour maximiser les indices.
       </div>
 
-      <button id="legend-start" class="legend-start-btn">C'est parti !</button>
+      <button id="legend-start" class="btn-primary">DÉMARRER</button>
     </div>
   </div>
 
   <footer>
-    <p>Fan-made — Dragon Ball © Akira Toriyama</p>
+    <p>FAN-MADE · DRAGON BALL © AKIRA TORIYAMA</p>
   </footer>
 
   <script src="data.js"></script>

@@ -5,16 +5,14 @@
 const ATTRIBUTES = [
   { key: "sex",     label: "Sexe",    type: "exact" },
   { key: "hair",    label: "Cheveux", type: "exact" },
-  { key: "origin",  label: "Origine", type: "origin" },   // partial si même planète OU même univers
+  { key: "origin",  label: "Origine", type: "exact" },    // planète seule → exact
   { key: "race",    label: "Race",    type: "exact" },
   { key: "episode", label: "Épisode", type: "numeric" },  // dégradé direction + intensité
-  { key: "saga",    label: "Saga",    type: "exact" },
-  { key: "serie",   label: "Série",   type: "multi" },    // partial si au moins une série commune
+  { key: "saga",    label: "Saga",    type: "saga" },     // dégradé sur SAGA_ORDER
+  { key: "serie",   label: "Série",   type: "multi" },    // partial si au moins une commune
 ];
 
-// ────────────────────────────────────────────
-//  EASTER EGG : Lucas Latraube
-// ────────────────────────────────────────────
+// ── Easter egg ──
 const EASTER_EGG_NAME = "Lucas Latraube";
 
 function normalize(str) {
@@ -24,7 +22,6 @@ function normalize(str) {
     .replace(/\s+/g, " ")
     .trim();
 }
-
 function isEasterEgg(name) {
   return normalize(name) === normalize(EASTER_EGG_NAME);
 }
@@ -33,8 +30,7 @@ function isEasterEgg(name) {
 function getDailyCharacter() {
   const today = new Date();
   const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  const index = seed % CHARACTERS.length;
-  return CHARACTERS[index];
+  return CHARACTERS[seed % CHARACTERS.length];
 }
 
 let target = getDailyCharacter();
@@ -57,6 +53,7 @@ const winName     = document.getElementById("win-name");
 const winTries    = document.getElementById("win-tries");
 const playAgainBtn = document.getElementById("play-again-btn");
 const easterScreen = document.getElementById("easter-screen");
+const easterTargetName = document.getElementById("easter-target-name");
 const easterPlayAgainBtn = document.getElementById("easter-play-again-btn");
 const hintBox     = document.getElementById("hint-box");
 const hintText    = document.getElementById("hint-text");
@@ -69,12 +66,12 @@ const helpBtn     = document.getElementById("help-btn");
 poolSpan.textContent = CHARACTERS.length;
 
 // ── Modale légende ──
-const LEGEND_KEY = "dbdle_legend_seen_v2"; // v2 = nouvelle légende avec dégradé
+const LEGEND_KEY = "dbdle_legend_seen_manga"; // nouvelle clé pour la nouvelle version
 
 function openLegend() { legendModal.classList.remove("hidden"); }
 function closeLegend() {
   legendModal.classList.add("hidden");
-  try { localStorage.setItem(LEGEND_KEY, "1"); } catch (e) { /* ignore */ }
+  try { localStorage.setItem(LEGEND_KEY, "1"); } catch (e) { /* */ }
 }
 
 try {
@@ -141,7 +138,7 @@ function submitGuess() {
   const name = input.value.trim();
   if (!name) return;
 
-  // 🥚 EASTER EGG
+  // 🥚 Easter egg
   if (isEasterEgg(name)) {
     gameWon = true;
     input.value = "";
@@ -153,11 +150,11 @@ function submitGuess() {
 
   const character = CHARACTERS.find(c => c.name.toLowerCase() === name.toLowerCase());
   if (!character) {
-    showError("Personnage introuvable ! Vérifie l'orthographe.");
+    showError("Personnage introuvable !");
     return;
   }
   if (guessedNames.has(character.name)) {
-    showError("Tu as déjà essayé ce personnage !");
+    showError("Déjà essayé !");
     return;
   }
 
@@ -184,11 +181,10 @@ function submitGuess() {
 function makePlaceholder() {
   const d = document.createElement("div");
   d.className = "cell-img-placeholder";
-  d.textContent = "🐉";
   return d;
 }
 
-// ── Rendu d'une ligne d'essai ──
+// ── Rendu d'une ligne ──
 function renderGuessRow(character) {
   const row = document.createElement("div");
   row.className = "guess-row";
@@ -219,10 +215,9 @@ function renderGuessRow(character) {
   nameCell.appendChild(nameSpan);
   row.appendChild(nameCell);
 
-  // Attributs comparés
   ATTRIBUTES.forEach((attr, i) => {
     const cell = buildCell(character, attr);
-    cell.style.animationDelay = `${i * 100}ms`;
+    cell.style.animationDelay = `${i * 90}ms`;
     row.appendChild(cell);
   });
 
@@ -230,7 +225,7 @@ function renderGuessRow(character) {
   requestAnimationFrame(() => row.classList.add("revealed"));
 }
 
-// ── Construit une cellule selon le type d'attribut ──
+// ── Construit une cellule selon le type ──
 function buildCell(character, attr) {
   const cell = document.createElement("div");
   cell.className = "cell";
@@ -239,63 +234,98 @@ function buildCell(character, attr) {
   const tVal = target[attr.key];
 
   if (attr.type === "numeric") {
-    // Épisode : dégradé direction + intensité
     return buildNumericCell(cell, gVal, tVal);
   }
-
+  if (attr.type === "saga") {
+    return buildSagaCell(cell, gVal, tVal);
+  }
   if (attr.type === "multi") {
-    // Série : multi-valeurs
     return buildMultiCell(cell, gVal, tVal);
   }
 
-  if (attr.type === "origin") {
-    // Origine : "Planète, Univers X"
-    return buildOriginCell(cell, gVal, tVal);
-  }
-
-  // Exact (sex, hair, race, saga)
+  // exact (sex, hair, origin, race)
   if (gVal === tVal) {
     cell.classList.add("correct");
-    cell.innerHTML = `<span class="cell-icon">✅</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   } else {
     cell.classList.add("wrong");
-    cell.innerHTML = `<span class="cell-icon">❌</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   }
   return cell;
 }
 
-// ── Cellule numérique (épisode) avec dégradé direction + intensité ──
+// ── Calcule l'intensité du dégradé selon l'écart absolu et l'échelle max ──
+function computeGradStop(absDiff, scale) {
+  // scale = "episode" ou "saga"
+  // Mappe absDiff → percent de gradient (10% loin → 85% proche)
+  if (scale === "episode") {
+    if (absDiff <= 3)        return 85;
+    else if (absDiff <= 10)  return 70;
+    else if (absDiff <= 25)  return 55;
+    else if (absDiff <= 50)  return 40;
+    else if (absDiff <= 100) return 25;
+    else                     return 12;
+  }
+  // saga (échelle plus courte : 24 sagas)
+  if (absDiff <= 1) return 85;
+  if (absDiff <= 2) return 70;
+  if (absDiff <= 4) return 55;
+  if (absDiff <= 7) return 40;
+  if (absDiff <= 12) return 25;
+  return 12;
+}
+
+// ── Cellule numérique (épisode) ──
 function buildNumericCell(cell, gVal, tVal) {
   if (gVal === tVal) {
     cell.classList.add("correct");
-    cell.innerHTML = `<span class="cell-icon">✅</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
+    return cell;
+  }
+  const diff = tVal - gVal;
+  const stop = computeGradStop(Math.abs(diff), "episode");
+  cell.style.setProperty("--grad-stop", stop + "%");
+
+  if (diff > 0) {
+    cell.classList.add("gradient-up");
+    cell.innerHTML = `<span class="cell-arrow">▲</span><span class="cell-val">${gVal}</span>`;
+  } else {
+    cell.classList.add("gradient-down");
+    cell.innerHTML = `<span class="cell-arrow">▼</span><span class="cell-val">${gVal}</span>`;
+  }
+  return cell;
+}
+
+// ── Cellule saga (dégradé sur l'ordre chronologique) ──
+function buildSagaCell(cell, gVal, tVal) {
+  if (gVal === tVal) {
+    cell.classList.add("correct");
+    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
     return cell;
   }
 
-  const diff = tVal - gVal; // >0 → vrai est plus haut, <0 → plus bas
-  const absDiff = Math.abs(diff);
+  // Cherche l'index de chaque saga dans SAGA_ORDER
+  const gIdx = SAGA_ORDER.indexOf(gVal);
+  const tIdx = SAGA_ORDER.indexOf(tVal);
 
-  // Intensité : plus l'écart est petit, plus le vert prend de place
-  // grad-stop : 10% (très loin) à 80% (très proche)
-  // Échelle basée sur la plage typique d'épisodes (0-300+)
-  let gradStop;
-  if (absDiff <= 5)        gradStop = 80;
-  else if (absDiff <= 15)  gradStop = 65;
-  else if (absDiff <= 30)  gradStop = 50;
-  else if (absDiff <= 60)  gradStop = 35;
-  else if (absDiff <= 120) gradStop = 20;
-  else                     gradStop = 10;
+  // Si une saga n'est pas dans la liste → fallback wrong (ne devrait pas arriver)
+  if (gIdx === -1 || tIdx === -1) {
+    cell.classList.add("wrong");
+    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
+    return cell;
+  }
 
-  cell.style.setProperty("--grad-stop", gradStop + "%");
+  const diff = tIdx - gIdx;
+  const stop = computeGradStop(Math.abs(diff), "saga");
+  cell.style.setProperty("--grad-stop", stop + "%");
 
   if (diff > 0) {
-    // Vrai est PLUS HAUT
+    // vrai saga PLUS TARD dans la chrono
     cell.classList.add("gradient-up");
-    cell.innerHTML = `<span class="cell-arrow">↑</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = `<span class="cell-arrow">▲</span><span class="cell-val">${gVal}</span>`;
   } else {
-    // Vrai est PLUS BAS
     cell.classList.add("gradient-down");
-    cell.innerHTML = `<span class="cell-arrow">↓</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = `<span class="cell-arrow">▼</span><span class="cell-val">${gVal}</span>`;
   }
   return cell;
 }
@@ -304,42 +334,17 @@ function buildNumericCell(cell, gVal, tVal) {
 function buildMultiCell(cell, gVal, tVal) {
   if (gVal === tVal) {
     cell.classList.add("correct");
-    cell.innerHTML = `<span class="cell-icon">✅</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
     return cell;
   }
   const gParts = gVal.split("/").map(s => s.trim());
   const tParts = tVal.split("/").map(s => s.trim());
   if (gParts.some(s => tParts.includes(s))) {
     cell.classList.add("partial");
-    cell.innerHTML = `<span class="cell-icon">🟡</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   } else {
     cell.classList.add("wrong");
-    cell.innerHTML = `<span class="cell-icon">❌</span><span class="cell-val">${gVal}</span>`;
-  }
-  return cell;
-}
-
-// ── Cellule origine ("Planète, Univers X") ──
-function buildOriginCell(cell, gVal, tVal) {
-  if (gVal === tVal) {
-    cell.classList.add("correct");
-    cell.innerHTML = `<span class="cell-icon">✅</span><span class="cell-val">${gVal}</span>`;
-    return cell;
-  }
-
-  // Découpe en planète + univers
-  const gParts = gVal.split(",").map(s => s.trim());
-  const tParts = tVal.split(",").map(s => s.trim());
-
-  const samePlanet = gParts[0] && tParts[0] && gParts[0].toLowerCase() === tParts[0].toLowerCase();
-  const sameUniverse = gParts[1] && tParts[1] && gParts[1].toLowerCase() === tParts[1].toLowerCase();
-
-  if (samePlanet || sameUniverse) {
-    cell.classList.add("partial");
-    cell.innerHTML = `<span class="cell-icon">🟡</span><span class="cell-val">${gVal}</span>`;
-  } else {
-    cell.classList.add("wrong");
-    cell.innerHTML = `<span class="cell-icon">❌</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   }
   return cell;
 }
@@ -348,7 +353,7 @@ function buildOriginCell(cell, gVal, tVal) {
 function showHint() {
   hintShown = true;
   const firstLetter = target.name.charAt(0).toUpperCase();
-  hintText.textContent = `Le nom du personnage commence par la lettre « ${firstLetter} »`;
+  hintText.textContent = `Le nom commence par « ${firstLetter} »`;
   hintBox.classList.remove("hidden");
 }
 
@@ -365,35 +370,30 @@ function showWin() {
   winName.textContent = target.name;
   winTries.textContent = guesses.length;
   winScreen.classList.remove("hidden");
-  launchKamehameha();
+  launchParticles(["★", "ドン", "バン", "カッ", "✦", "ZZZ"]);
 }
 
 function showEasterWin() {
+  easterTargetName.textContent = target.name;
   easterScreen.classList.remove("hidden");
-  launchEasterParticles();
+  launchParticles(["★", "✦", "ゴゴ", "ドン", "クッ", "♛"]);
 }
 
-function launchKamehameha() {
-  for (let i = 0; i < 30; i++) {
-    setTimeout(() => spawnParticle(["⭐", "✨", "🌟", "💥", "🔥", "⚡"]), i * 60);
+function launchParticles(symbols) {
+  for (let i = 0; i < 35; i++) {
+    setTimeout(() => spawnParticle(symbols), i * 55);
   }
 }
 
-function launchEasterParticles() {
-  for (let i = 0; i < 50; i++) {
-    setTimeout(() => spawnParticle(["👑", "💜", "✨", "🌟", "⭐", "🔮"]), i * 50);
-  }
-}
-
-function spawnParticle(emojis) {
+function spawnParticle(symbols) {
   const p = document.createElement("div");
   p.className = "particle";
   p.style.left = Math.random() * 100 + "vw";
-  p.style.animationDuration = (0.8 + Math.random() * 1.2) + "s";
-  p.style.fontSize = (16 + Math.random() * 24) + "px";
-  p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+  p.style.animationDuration = (1 + Math.random() * 1.2) + "s";
+  p.style.fontSize = (18 + Math.random() * 26) + "px";
+  p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
   document.body.appendChild(p);
-  setTimeout(() => p.remove(), 2500);
+  setTimeout(() => p.remove(), 2800);
 }
 
 // ── Rejouer ──
