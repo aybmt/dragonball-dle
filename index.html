@@ -19,14 +19,22 @@
     <div class="db db7">★★★★★★★</div>
   </div>
 
+  <!-- Bouton aide en haut à droite -->
+  <button id="help-btn" class="help-btn" title="Voir la légende" aria-label="Voir la légende">?</button>
+
   <header>
     <div class="logo-wrap">
       <span class="logo-dragon">🐉</span>
       <h1>Dragon Ball <span class="dle">DLE</span></h1>
     </div>
     <p class="subtitle">Devine le personnage mystère !</p>
-    <div class="tries-counter">
-      Essais : <span id="tries">0</span>
+    <div class="header-stats">
+      <div class="tries-counter">
+        Essais : <span id="tries">0</span>
+      </div>
+      <div class="tries-counter">
+        Personnages : <span id="pool-count">0</span>
+      </div>
     </div>
   </header>
 
@@ -41,6 +49,11 @@
 
     <div id="error-msg" class="error-msg hidden"></div>
 
+    <div id="hint-box" class="hint-box hidden">
+      <span class="hint-icon">💡</span>
+      <span id="hint-text"></span>
+    </div>
+
     <div id="columns-header" class="columns-header hidden">
       <div class="col-label">Personnage</div>
       <div class="col-label">Sexe</div>
@@ -54,6 +67,7 @@
 
     <div id="guesses-container"></div>
 
+    <!-- Écran de victoire classique -->
     <div id="win-screen" class="win-screen hidden">
       <div class="win-content">
         <div class="win-aura"></div>
@@ -63,7 +77,72 @@
         <button id="play-again-btn">Rejouer</button>
       </div>
     </div>
+
+    <!-- Écran de victoire EASTER EGG -->
+    <div id="easter-screen" class="win-screen easter-screen hidden">
+      <div class="win-content easter-content">
+        <div class="easter-aura"></div>
+        <div class="win-emoji">👑</div>
+        <h2 class="easter-title">LEGENDE !</h2>
+        <p class="easter-tag">EASTER EGG TROUVÉ</p>
+        <p>Tu as invoqué le légendaire <strong>Lucas Latraube</strong>,<br>maître ultime du Dragon Ball DLE.</p>
+        <p class="easter-subline">Victoire instantanée 🐲</p>
+        <button id="easter-play-again-btn">Rejouer</button>
+      </div>
+    </div>
   </main>
+
+  <!-- Modale légende -->
+  <div id="legend-modal" class="legend-modal hidden">
+    <div class="legend-content">
+      <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
+      <div class="legend-header">
+        <span class="legend-emoji">🐉</span>
+        <h2>Comment jouer</h2>
+      </div>
+      <p class="legend-intro">
+        Devine le personnage mystère du jour ! À chaque essai, les cases t'indiquent à quel point tu es proche.
+      </p>
+
+      <div class="legend-rules">
+        <div class="legend-row">
+          <div class="legend-cell-demo correct">
+            <span class="cell-icon">✅</span>
+            <span class="cell-val">Saiyan</span>
+          </div>
+          <div class="legend-explain">
+            <strong>Vert</strong> — Attribut <em>identique</em> au personnage mystère.
+          </div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo partial">
+            <span class="cell-icon">🟡</span>
+            <span class="cell-val">DBZ / Super</span>
+          </div>
+          <div class="legend-explain">
+            <strong>Jaune</strong> — <em>Partiellement correct</em>. S'applique uniquement à la saga : au moins une saga est commune.
+          </div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo wrong">
+            <span class="cell-icon">❌</span>
+            <span class="cell-val">Humain</span>
+          </div>
+          <div class="legend-explain">
+            <strong>Rouge</strong> — Attribut <em>différent</em> du personnage mystère.
+          </div>
+        </div>
+      </div>
+
+      <div class="legend-tips">
+        <p>💡 Astuce : commence avec un personnage emblématique pour avoir un maximum d'indices.</p>
+      </div>
+
+      <button id="legend-start" class="legend-start-btn">C'est parti !</button>
+    </div>
+  </div>
 
   <footer>
     <p>Fan-made — Dragon Ball © Akira Toriyama</p>
