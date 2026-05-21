@@ -3,56 +3,69 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dragon Ball DLE</title>
+  <title>Dragon Ball DLE — Scouter Edition</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Zen+Antique&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Russo+One&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <!-- Texture papier + grain -->
-  <div class="paper-grain" aria-hidden="true"></div>
-
-  <!-- Onomatopées japonaises décoratives en arrière-plan -->
-  <div class="onomatopoeias" aria-hidden="true">
-    <span class="ono ono-1">ドン</span>
-    <span class="ono ono-2">バン</span>
-    <span class="ono ono-3">ゴゴゴ</span>
-    <span class="ono ono-4">クッ</span>
-    <span class="ono ono-5">カッ</span>
+  <!-- Fond spatial : étoiles + nébuleuse -->
+  <div class="space-bg" aria-hidden="true">
+    <div class="nebula"></div>
+    <div class="stars-layer"></div>
   </div>
 
-  <!-- Speedlines SVG décoratives (coin haut-gauche) -->
-  <svg class="speedlines speedlines-top" viewBox="0 0 200 200" aria-hidden="true">
-    <g stroke="black" stroke-width="2" fill="none">
-      <line x1="0" y1="0" x2="120" y2="60" />
-      <line x1="0" y1="20" x2="100" y2="80" />
-      <line x1="0" y1="40" x2="80" y2="90" />
-      <line x1="0" y1="60" x2="60" y2="100" />
-      <line x1="20" y1="0" x2="100" y2="40" />
-      <line x1="40" y1="0" x2="110" y2="50" />
-      <line x1="60" y1="0" x2="130" y2="40" />
-    </g>
-  </svg>
+  <!-- Scanlines CRT par-dessus -->
+  <div class="scanlines" aria-hidden="true"></div>
 
-  <button id="help-btn" class="help-btn" title="Voir la légende" aria-label="Voir la légende">?</button>
+  <!-- Coins de viseur HUD -->
+  <div class="hud-corner hud-tl" aria-hidden="true">
+    <svg viewBox="0 0 60 60"><path d="M0 18 L0 0 L18 0" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="6" cy="6" r="2" fill="currentColor"/></svg>
+  </div>
+  <div class="hud-corner hud-tr" aria-hidden="true">
+    <svg viewBox="0 0 60 60"><path d="M42 0 L60 0 L60 18" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="54" cy="6" r="2" fill="currentColor"/></svg>
+  </div>
+  <div class="hud-corner hud-bl" aria-hidden="true">
+    <svg viewBox="0 0 60 60"><path d="M0 42 L0 60 L18 60" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+  </div>
+  <div class="hud-corner hud-br" aria-hidden="true">
+    <svg viewBox="0 0 60 60"><path d="M42 60 L60 60 L60 42" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+  </div>
+
+  <button id="help-btn" class="help-btn" title="Scouter Manual" aria-label="Voir le manuel">?</button>
 
   <header>
-    <div class="title-panel">
+    <div class="title-block">
+      <div class="title-flag">
+        <span class="flag-tag">▸ SCOUTER ACTIVE</span>
+        <span class="flag-dot"></span>
+      </div>
       <h1>
         <span class="title-main">DRAGON BALL</span>
-        <span class="title-sub">DLE</span>
+        <span class="title-sub">D · L · E</span>
       </h1>
-      <p class="subtitle">第1話 — Devine le personnage mystère</p>
+      <p class="subtitle">SCANNING TARGET<span class="dots">...</span></p>
+
+      <!-- 7 Dragon Balls = compteur d'essais visuels -->
+      <div class="dragon-balls" id="dragon-balls" aria-hidden="true">
+        <span class="db" data-n="1"><span class="star">★</span></span>
+        <span class="db" data-n="2"><span class="star">★★</span></span>
+        <span class="db" data-n="3"><span class="star">★★★</span></span>
+        <span class="db" data-n="4"><span class="star">★★★★</span></span>
+        <span class="db" data-n="5"><span class="star">★★★★★</span></span>
+        <span class="db" data-n="6"><span class="star">★★★★★★</span></span>
+        <span class="db" data-n="7"><span class="star">★★★★★★★</span></span>
+      </div>
     </div>
 
     <div class="header-stats">
       <div class="stat-tag">
-        <span class="stat-label">ESSAIS</span>
+        <span class="stat-label">ATTEMPTS</span>
         <span class="stat-value" id="tries">0</span>
       </div>
       <div class="stat-tag">
-        <span class="stat-label">PERSOS</span>
+        <span class="stat-label">POWER LEVELS</span>
         <span class="stat-value" id="pool-count">0</span>
       </div>
     </div>
@@ -61,86 +74,102 @@
   <main>
     <div class="search-panel">
       <div class="search-box">
-        <input type="text" id="search-input" placeholder="Nom du personnage..." autocomplete="off" />
+        <span class="search-prompt">&gt;</span>
+        <input type="text" id="search-input" placeholder="ENTER TARGET NAME..." autocomplete="off" />
+        <span class="search-blink">_</span>
         <div id="suggestions" class="suggestions hidden"></div>
       </div>
       <button id="guess-btn">
-        <span>GO</span>
+        <span>SCAN</span>
       </button>
     </div>
 
-    <div id="error-msg" class="error-msg hidden"></div>
+    <div id="error-msg" class="error-msg hidden">
+      <span class="err-icon">⚠</span>
+      <span id="error-text"></span>
+    </div>
 
     <div id="hint-box" class="hint-box hidden">
-      <span class="hint-label">INDICE</span>
+      <span class="hint-label">▸ INTEL</span>
       <span id="hint-text"></span>
     </div>
 
     <div id="columns-header" class="columns-header hidden">
-      <div class="col-label">Personnage</div>
-      <div class="col-label">Sexe</div>
-      <div class="col-label">Cheveux</div>
-      <div class="col-label">Origine</div>
-      <div class="col-label">Race</div>
-      <div class="col-label">Épisode</div>
-      <div class="col-label">Saga</div>
-      <div class="col-label">Série</div>
+      <div class="col-label">TARGET</div>
+      <div class="col-label">SEX</div>
+      <div class="col-label">HAIR</div>
+      <div class="col-label">ORIGIN</div>
+      <div class="col-label">RACE</div>
+      <div class="col-label">EPISODE</div>
+      <div class="col-label">SAGA</div>
+      <div class="col-label">SERIES</div>
     </div>
 
     <div id="guesses-container"></div>
 
-    <!-- Écran victoire classique -->
+    <!-- VICTOIRE CLASSIQUE -->
     <div id="win-screen" class="overlay hidden">
       <div class="win-panel">
-        <div class="win-corners">
+        <div class="panel-corners">
           <span class="corner tl"></span><span class="corner tr"></span>
           <span class="corner bl"></span><span class="corner br"></span>
         </div>
-        <p class="win-kanji">勝利</p>
-        <h2>KAMEHAMEHA !</h2>
+        <div class="power-readout">
+          <span class="readout-label">POWER LEVEL DETECTED</span>
+          <span class="readout-value" id="win-power">0</span>
+        </div>
+        <h2>OVER 9000 !!!</h2>
         <p class="win-text">
-          Tu as trouvé <strong id="win-name"></strong><br>
-          en <strong><span id="win-tries"></span> essai(s)</strong> !
+          TARGET LOCKED : <strong id="win-name"></strong><br>
+          <span class="tries-line">Essai(s) : <strong><span id="win-tries"></span></strong></span>
         </p>
-        <button id="play-again-btn" class="btn-primary">REJOUER</button>
+        <button id="play-again-btn" class="btn-primary">
+          <span class="btn-bracket">[</span> NEW SCAN <span class="btn-bracket">]</span>
+        </button>
       </div>
     </div>
 
-    <!-- Écran victoire EASTER EGG -->
+    <!-- EASTER EGG : Ultra Instinct -->
     <div id="easter-screen" class="overlay hidden">
       <div class="win-panel easter-panel">
-        <div class="win-corners">
+        <div class="panel-corners">
           <span class="corner tl"></span><span class="corner tr"></span>
           <span class="corner bl"></span><span class="corner br"></span>
         </div>
-        <p class="win-kanji">伝説</p>
-        <h2 class="easter-title">LÉGENDE</h2>
-        <p class="easter-tag">EASTER EGG</p>
+        <div class="power-readout easter-readout">
+          <span class="readout-label">⚠ ANOMALY DETECTED</span>
+          <span class="readout-value">∞</span>
+        </div>
+        <h2 class="easter-title">ULTRA INSTINCT</h2>
+        <p class="easter-tag">▸ EASTER EGG ◂</p>
         <p class="win-text">
           Tu as invoqué <strong>Lucas Latraube</strong>,<br>
-          maître ultime du Dragon Ball DLE.
+          puissance incommensurable.
         </p>
-        <p class="easter-target">
-          Le personnage à deviner était <strong id="easter-target-name"></strong>
-        </p>
-        <button id="easter-play-again-btn" class="btn-primary">REJOUER</button>
+        <div class="easter-target-box">
+          <span class="readout-label">REAL TARGET WAS</span>
+          <span class="readout-value" id="easter-target-name"></span>
+        </div>
+        <button id="easter-play-again-btn" class="btn-primary">
+          <span class="btn-bracket">[</span> NEW SCAN <span class="btn-bracket">]</span>
+        </button>
       </div>
     </div>
   </main>
 
-  <!-- Modale légende -->
+  <!-- MANUEL / LÉGENDE -->
   <div id="legend-modal" class="overlay hidden">
     <div class="legend-panel">
-      <div class="win-corners">
+      <div class="panel-corners">
         <span class="corner tl"></span><span class="corner tr"></span>
         <span class="corner bl"></span><span class="corner br"></span>
       </div>
       <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
 
-      <p class="legend-kanji">説明</p>
-      <h2>COMMENT JOUER</h2>
+      <p class="legend-prefix">▸ SCOUTER MANUAL</p>
+      <h2>READING THE DATA</h2>
       <p class="legend-intro">
-        Devine le personnage mystère. Chaque essai révèle des indices via les couleurs des cases.
+        Le scouter analyse chaque cible et compare ses attributs. Voici le code couleur :
       </p>
 
       <div class="legend-rules">
@@ -149,7 +178,7 @@
             <span class="cell-val">Saiyan</span>
           </div>
           <div class="legend-explain">
-            <strong>Identique</strong> — Attribut exact du personnage mystère.
+            <strong class="c-green">MATCH</strong> — Attribut identique à la cible.
           </div>
         </div>
 
@@ -158,7 +187,7 @@
             <span class="cell-val">DBZ / DBS</span>
           </div>
           <div class="legend-explain">
-            <strong>Partiel</strong> — Au moins une valeur en commun. Concerne la <em>Série</em>.
+            <strong class="c-orange">PARTIAL</strong> — Au moins une valeur en commun (Série).
           </div>
         </div>
 
@@ -167,7 +196,7 @@
             <span class="cell-val">Humain</span>
           </div>
           <div class="legend-explain">
-            <strong>Différent</strong> — Aucun rapport avec le mystère.
+            <strong class="c-red">NO MATCH</strong> — Aucun rapport avec la cible.
           </div>
         </div>
 
@@ -177,7 +206,7 @@
             <span class="cell-val">40</span>
           </div>
           <div class="legend-explain">
-            <strong>Plus haut ▲</strong> — Pour <em>Épisode</em> &amp; <em>Saga</em>. La vraie valeur est <strong>plus tardive</strong>. Plus la zone claire est grande, plus tu es proche.
+            <strong class="c-green">▲ HIGHER</strong> — <em>Épisode</em> et <em>Saga</em>. Cible <strong>plus tardive</strong>. Plus de vert = plus proche.
           </div>
         </div>
 
@@ -187,16 +216,19 @@
             <span class="cell-val">120</span>
           </div>
           <div class="legend-explain">
-            <strong>Plus bas ▼</strong> — La vraie valeur est <strong>plus précoce</strong>.
+            <strong class="c-green">▼ LOWER</strong> — Cible <strong>plus précoce</strong>.
           </div>
         </div>
       </div>
 
       <div class="legend-tip">
-        Astuce — commence par un personnage emblématique pour maximiser les indices.
+        <span class="tip-prefix">▸ TIP</span>
+        Commence par un personnage emblématique pour collecter un maximum d'indices.
       </div>
 
-      <button id="legend-start" class="btn-primary">DÉMARRER</button>
+      <button id="legend-start" class="btn-primary">
+        <span class="btn-bracket">[</span> BEGIN SCAN <span class="btn-bracket">]</span>
+      </button>
     </div>
   </div>
 

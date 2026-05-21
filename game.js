@@ -1,15 +1,15 @@
 // =============================================
-//  DRAGON BALL DLE — Logique de jeu
+//  DRAGON BALL DLE — Logique de jeu (Scouter Edition)
 // =============================================
 
 const ATTRIBUTES = [
   { key: "sex",     label: "Sexe",    type: "exact" },
   { key: "hair",    label: "Cheveux", type: "exact" },
-  { key: "origin",  label: "Origine", type: "exact" },    // planète seule → exact
+  { key: "origin",  label: "Origine", type: "exact" },
   { key: "race",    label: "Race",    type: "exact" },
-  { key: "episode", label: "Épisode", type: "numeric" },  // dégradé direction + intensité
-  { key: "saga",    label: "Saga",    type: "saga" },     // dégradé sur SAGA_ORDER
-  { key: "serie",   label: "Série",   type: "multi" },    // partial si au moins une commune
+  { key: "episode", label: "Épisode", type: "numeric" },
+  { key: "saga",    label: "Saga",    type: "saga" },
+  { key: "serie",   label: "Série",   type: "multi" },
 ];
 
 // ── Easter egg ──
@@ -48,15 +48,18 @@ const triesSpan   = document.getElementById("tries");
 const poolSpan    = document.getElementById("pool-count");
 const columnsHeader = document.getElementById("columns-header");
 const errorMsg    = document.getElementById("error-msg");
+const errorText   = document.getElementById("error-text");
 const winScreen   = document.getElementById("win-screen");
 const winName     = document.getElementById("win-name");
 const winTries    = document.getElementById("win-tries");
+const winPower    = document.getElementById("win-power");
 const playAgainBtn = document.getElementById("play-again-btn");
 const easterScreen = document.getElementById("easter-screen");
 const easterTargetName = document.getElementById("easter-target-name");
 const easterPlayAgainBtn = document.getElementById("easter-play-again-btn");
 const hintBox     = document.getElementById("hint-box");
 const hintText    = document.getElementById("hint-text");
+const dragonBalls = document.getElementById("dragon-balls");
 
 const legendModal = document.getElementById("legend-modal");
 const legendClose = document.getElementById("legend-close");
@@ -66,7 +69,7 @@ const helpBtn     = document.getElementById("help-btn");
 poolSpan.textContent = CHARACTERS.length;
 
 // ── Modale légende ──
-const LEGEND_KEY = "dbdle_legend_seen_manga"; // nouvelle clé pour la nouvelle version
+const LEGEND_KEY = "dbdle_legend_seen_scouter";
 
 function openLegend() { legendModal.classList.remove("hidden"); }
 function closeLegend() {
@@ -89,6 +92,22 @@ legendModal.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !legendModal.classList.contains("hidden")) closeLegend();
 });
+
+// ── Mise à jour des 7 boules de cristal ──
+// Elles s'allument une par une selon le nombre d'essais (max 7 affichées)
+function updateDragonBalls() {
+  const balls = dragonBalls.querySelectorAll(".db");
+  balls.forEach((ball, idx) => {
+    if (idx < guesses.length && idx < 7) {
+      if (!ball.classList.contains("lit")) {
+        // animation de pop seulement à l'apparition
+        ball.classList.add("lit");
+      }
+    } else {
+      ball.classList.remove("lit");
+    }
+  });
+}
 
 // ── Autocomplétion ──
 input.addEventListener("input", () => {
@@ -150,11 +169,11 @@ function submitGuess() {
 
   const character = CHARACTERS.find(c => c.name.toLowerCase() === name.toLowerCase());
   if (!character) {
-    showError("Personnage introuvable !");
+    showError("TARGET NOT FOUND");
     return;
   }
   if (guessedNames.has(character.name)) {
-    showError("Déjà essayé !");
+    showError("ALREADY SCANNED");
     return;
   }
 
@@ -162,6 +181,7 @@ function submitGuess() {
   guessedNames.add(character.name);
   guesses.push(character);
   triesSpan.textContent = guesses.length;
+  updateDragonBalls();
 
   columnsHeader.classList.remove("hidden");
   renderGuessRow(character);
@@ -217,7 +237,7 @@ function renderGuessRow(character) {
 
   ATTRIBUTES.forEach((attr, i) => {
     const cell = buildCell(character, attr);
-    cell.style.animationDelay = `${i * 90}ms`;
+    cell.style.animationDelay = `${i * 110}ms`;
     row.appendChild(cell);
   });
 
@@ -225,7 +245,6 @@ function renderGuessRow(character) {
   requestAnimationFrame(() => row.classList.add("revealed"));
 }
 
-// ── Construit une cellule selon le type ──
 function buildCell(character, attr) {
   const cell = document.createElement("div");
   cell.className = "cell";
@@ -233,31 +252,21 @@ function buildCell(character, attr) {
   const gVal = character[attr.key];
   const tVal = target[attr.key];
 
-  if (attr.type === "numeric") {
-    return buildNumericCell(cell, gVal, tVal);
-  }
-  if (attr.type === "saga") {
-    return buildSagaCell(cell, gVal, tVal);
-  }
-  if (attr.type === "multi") {
-    return buildMultiCell(cell, gVal, tVal);
-  }
+  if (attr.type === "numeric")   return buildNumericCell(cell, gVal, tVal);
+  if (attr.type === "saga")      return buildSagaCell(cell, gVal, tVal);
+  if (attr.type === "multi")     return buildMultiCell(cell, gVal, tVal);
 
-  // exact (sex, hair, origin, race)
+  // exact
   if (gVal === tVal) {
     cell.classList.add("correct");
-    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   } else {
     cell.classList.add("wrong");
-    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   }
+  cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   return cell;
 }
 
-// ── Calcule l'intensité du dégradé selon l'écart absolu et l'échelle max ──
 function computeGradStop(absDiff, scale) {
-  // scale = "episode" ou "saga"
-  // Mappe absDiff → percent de gradient (10% loin → 85% proche)
   if (scale === "episode") {
     if (absDiff <= 3)        return 85;
     else if (absDiff <= 10)  return 70;
@@ -266,7 +275,7 @@ function computeGradStop(absDiff, scale) {
     else if (absDiff <= 100) return 25;
     else                     return 12;
   }
-  // saga (échelle plus courte : 24 sagas)
+  // saga
   if (absDiff <= 1) return 85;
   if (absDiff <= 2) return 70;
   if (absDiff <= 4) return 55;
@@ -275,7 +284,6 @@ function computeGradStop(absDiff, scale) {
   return 12;
 }
 
-// ── Cellule numérique (épisode) ──
 function buildNumericCell(cell, gVal, tVal) {
   if (gVal === tVal) {
     cell.classList.add("correct");
@@ -296,31 +304,23 @@ function buildNumericCell(cell, gVal, tVal) {
   return cell;
 }
 
-// ── Cellule saga (dégradé sur l'ordre chronologique) ──
 function buildSagaCell(cell, gVal, tVal) {
   if (gVal === tVal) {
     cell.classList.add("correct");
     cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
     return cell;
   }
-
-  // Cherche l'index de chaque saga dans SAGA_ORDER
   const gIdx = SAGA_ORDER.indexOf(gVal);
   const tIdx = SAGA_ORDER.indexOf(tVal);
-
-  // Si une saga n'est pas dans la liste → fallback wrong (ne devrait pas arriver)
   if (gIdx === -1 || tIdx === -1) {
     cell.classList.add("wrong");
     cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
     return cell;
   }
-
   const diff = tIdx - gIdx;
   const stop = computeGradStop(Math.abs(diff), "saga");
   cell.style.setProperty("--grad-stop", stop + "%");
-
   if (diff > 0) {
-    // vrai saga PLUS TARD dans la chrono
     cell.classList.add("gradient-up");
     cell.innerHTML = `<span class="cell-arrow">▲</span><span class="cell-val">${gVal}</span>`;
   } else {
@@ -330,22 +330,15 @@ function buildSagaCell(cell, gVal, tVal) {
   return cell;
 }
 
-// ── Cellule multi-valeurs (série) ──
 function buildMultiCell(cell, gVal, tVal) {
   if (gVal === tVal) {
     cell.classList.add("correct");
-    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
-    return cell;
-  }
-  const gParts = gVal.split("/").map(s => s.trim());
-  const tParts = tVal.split("/").map(s => s.trim());
-  if (gParts.some(s => tParts.includes(s))) {
-    cell.classList.add("partial");
-    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   } else {
-    cell.classList.add("wrong");
-    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
+    const gP = gVal.split("/").map(s => s.trim());
+    const tP = tVal.split("/").map(s => s.trim());
+    cell.classList.add(gP.some(s => tP.includes(s)) ? "partial" : "wrong");
   }
+  cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
   return cell;
 }
 
@@ -353,44 +346,68 @@ function buildMultiCell(cell, gVal, tVal) {
 function showHint() {
   hintShown = true;
   const firstLetter = target.name.charAt(0).toUpperCase();
-  hintText.textContent = `Le nom commence par « ${firstLetter} »`;
+  hintText.textContent = `Target name starts with « ${firstLetter} »`;
   hintBox.classList.remove("hidden");
 }
 
 // ── Erreur ──
 function showError(msg) {
-  errorMsg.textContent = msg;
+  errorText.textContent = msg;
   errorMsg.classList.remove("hidden");
+  // Restart shake animation
+  errorMsg.style.animation = "none";
+  void errorMsg.offsetWidth;
+  errorMsg.style.animation = "";
   setTimeout(clearError, 3000);
 }
 function clearError() { errorMsg.classList.add("hidden"); }
+
+// ── Calcule un "power level" fictif pour le screen victoire (clin d'œil DBZ) ──
+function computePowerLevel(tries) {
+  // Moins d'essais = power level plus élevé
+  // 1 essai → 9001, 10 essais → ~3000
+  const base = Math.max(1000, Math.floor(9001 - (tries - 1) * 600 + Math.random() * 400));
+  return base.toLocaleString("en-US");
+}
 
 // ── Victoire ──
 function showWin() {
   winName.textContent = target.name;
   winTries.textContent = guesses.length;
+  winPower.textContent = computePowerLevel(guesses.length);
   winScreen.classList.remove("hidden");
-  launchParticles(["★", "ドン", "バン", "カッ", "✦", "ZZZ"]);
+  launchParticles("gold");
 }
 
 function showEasterWin() {
   easterTargetName.textContent = target.name;
   easterScreen.classList.remove("hidden");
-  launchParticles(["★", "✦", "ゴゴ", "ドン", "クッ", "♛"]);
+  launchParticles("silver");
 }
 
-function launchParticles(symbols) {
+function launchParticles(theme) {
+  let symbols, klass;
+  if (theme === "silver") {
+    symbols = ["★", "✦", "◆", "▲", "✧", "✺"];
+    klass = "silver";
+  } else if (theme === "gold") {
+    symbols = ["★", "✦", "◆", "9000+", "OVER", "✧"];
+    klass = "gold";
+  } else {
+    symbols = ["★", "✦", "◆", "▲"];
+    klass = "";
+  }
   for (let i = 0; i < 35; i++) {
-    setTimeout(() => spawnParticle(symbols), i * 55);
+    setTimeout(() => spawnParticle(symbols, klass), i * 55);
   }
 }
 
-function spawnParticle(symbols) {
+function spawnParticle(symbols, klass) {
   const p = document.createElement("div");
-  p.className = "particle";
+  p.className = "particle" + (klass ? " " + klass : "");
   p.style.left = Math.random() * 100 + "vw";
   p.style.animationDuration = (1 + Math.random() * 1.2) + "s";
-  p.style.fontSize = (18 + Math.random() * 26) + "px";
+  p.style.fontSize = (14 + Math.random() * 22) + "px";
   p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
   document.body.appendChild(p);
   setTimeout(() => p.remove(), 2800);
@@ -410,8 +427,12 @@ function resetGame() {
   hintBox.classList.add("hidden");
   winScreen.classList.add("hidden");
   easterScreen.classList.add("hidden");
+  updateDragonBalls();
   input.focus();
 }
 
 playAgainBtn.addEventListener("click", resetGame);
 easterPlayAgainBtn.addEventListener("click", resetGame);
+
+// Initial state des Dragon Balls
+updateDragonBalls();
