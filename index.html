@@ -55,7 +55,6 @@
         <div id="guesses-container"></div>
       </div>
 
-      <!-- Écran déjà gagné aujourd'hui (affiché si localStorage indique victoire du jour) -->
       <div id="already-won" class="already-won-panel hidden">
         <h2>Tu as déjà gagné aujourd'hui !</h2>
         <p>Tu avais trouvé <strong id="already-name"></strong> en <strong><span id="already-tries"></span> essai(s)</strong>.</p>
@@ -71,7 +70,6 @@
         </div>
       </div>
 
-      <!-- VICTOIRE -->
       <div id="win-screen" class="overlay hidden">
         <div class="modal-panel">
           <h2>Bien joué !</h2>
@@ -90,7 +88,6 @@
         </div>
       </div>
 
-      <!-- EASTER EGG -->
       <div id="easter-screen" class="overlay hidden">
         <div class="modal-panel easter-panel">
           <h2>Légende !</h2>
@@ -109,7 +106,6 @@
     </footer>
   </div>
 
-  <!-- LÉGENDE -->
   <div id="legend-modal" class="overlay hidden">
     <div class="modal-panel legend-panel">
       <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
@@ -157,8 +153,6 @@
     </div>
   </div>
 
-  <!-- Supabase client (depuis CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
   <script src="game.js"></script>
 </body>

@@ -3,26 +3,8 @@
 //  • Personnage du jour commun à tous (fuseau Paris)
 //  • Reset à minuit Paris
 //  • Mémorisation de la victoire (localStorage)
-//  • Compteur de joueurs via Supabase (optionnel)
+//  • Compteur de joueurs simulé (déterministe par jour)
 // =============================================
-
-// ═══════════════════════════════════════════════
-//  CONFIG SUPABASE — À REMPLIR
-//  Si non configuré, le compteur affichera "—"
-//  Voir SUPABASE_SETUP.md pour les instructions
-// ═══════════════════════════════════════════════
-const SUPABASE_URL = "";       // ex: "https://xxxxx.supabase.co"
-const SUPABASE_ANON_KEY = "";  // clé publique anon
-
-let supaClient = null;
-try {
-  if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window !== "undefined" && window.supabase && typeof window.supabase.createClient === "function") {
-    supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
-} catch (e) {
-  console.warn("Supabase init failed (non-blocking):", e);
-  supaClient = null;
-}
 
 // ─── Attributs ───
 const ATTRIBUTES = [
@@ -53,53 +35,59 @@ function isEasterEgg(name) {
 //  GESTION DU JOUR (fuseau Europe/Paris)
 // ═══════════════════════════════════════════════
 
-// Retourne une date YYYY-MM-DD basée sur l'heure de Paris
-function getParisDateKey(date = new Date()) {
-  // Intl.DateTimeFormat nous donne l'heure dans le fuseau souhaité
-  const parts = new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
-    year: "numeric", month: "2-digit", day: "2-digit"
-  }).formatToParts(date);
-
-  const y = parts.find(p => p.type === "year").value;
-  const m = parts.find(p => p.type === "month").value;
-  const d = parts.find(p => p.type === "day").value;
-  return `${y}-${m}-${d}`;
+function getParisDateKey(date) {
+  date = date || new Date();
+  try {
+    const parts = new Intl.DateTimeFormat("fr-FR", {
+      timeZone: "Europe/Paris",
+      year: "numeric", month: "2-digit", day: "2-digit"
+    }).formatToParts(date);
+    const y = parts.find(p => p.type === "year").value;
+    const m = parts.find(p => p.type === "month").value;
+    const d = parts.find(p => p.type === "day").value;
+    return y + "-" + m + "-" + d;
+  } catch (e) {
+    // fallback : date locale
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + d;
+  }
 }
 
-// Hash déterministe de la date → index dans CHARACTERS
-// Utilise un hash simple (FNV-1a) pour bien randomiser
+// Hash déterministe FNV-1a
 function hashString(str) {
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
-  return h >>> 0; // unsigned
+  return h >>> 0;
 }
 
 function getDailyCharacter() {
   const dateKey = getParisDateKey();
   const index = hashString(dateKey) % CHARACTERS.length;
-  return { character: CHARACTERS[index], dateKey };
+  return { character: CHARACTERS[index], dateKey: dateKey };
 }
 
-// Calcule le temps restant jusqu'à minuit Paris
 function getTimeUntilMidnightParis() {
-  const now = new Date();
-  // Heure actuelle à Paris
-  const parisNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-  // Heure locale actuelle (pour calculer l'offset Paris vs local)
-  const localNow = new Date(now.toLocaleString("en-US"));
-  const offsetMs = parisNow.getTime() - localNow.getTime();
-
-  // Construit "minuit prochain à Paris"
-  const nextMidnightParis = new Date(parisNow);
-  nextMidnightParis.setHours(24, 0, 0, 0); // minuit du lendemain
-  // Convertit vers le fuseau UTC absolu en retranchant l'offset
-  const targetUtc = nextMidnightParis.getTime() - offsetMs;
-
-  return Math.max(0, targetUtc - now.getTime());
+  try {
+    const now = new Date();
+    const parisNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    const localNow = new Date(now.toLocaleString("en-US"));
+    const offsetMs = parisNow.getTime() - localNow.getTime();
+    const nextMidnightParis = new Date(parisNow);
+    nextMidnightParis.setHours(24, 0, 0, 0);
+    const targetUtc = nextMidnightParis.getTime() - offsetMs;
+    return Math.max(0, targetUtc - now.getTime());
+  } catch (e) {
+    // fallback : minuit local
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(24, 0, 0, 0);
+    return Math.max(0, next.getTime() - now.getTime());
+  }
 }
 
 function formatTimeLeft(ms) {
@@ -107,7 +95,43 @@ function formatTimeLeft(ms) {
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+// ═══════════════════════════════════════════════
+//  COMPTEUR SIMULÉ DÉTERMINISTE
+//  Génère un nombre de joueurs crédible basé sur la date,
+//  qui augmente progressivement au fil de la journée.
+// ═══════════════════════════════════════════════
+
+function getSimulatedPlayerCount(dateKey) {
+  // Base déterministe : entre ~80 et ~250 par jour selon le hash
+  const dayHash = hashString(dateKey + "_players");
+  const baseTotal = 80 + (dayHash % 170);
+
+  // Progression dans la journée : 0% à minuit, ~100% à 23h59
+  // On suppose une courbe : croissance lente le matin, pic en soirée
+  try {
+    const now = new Date();
+    const parisHour = parseInt(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Paris", hour: "numeric", hour12: false
+      }).format(now), 10
+    );
+    const parisMin = parseInt(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Paris", minute: "numeric"
+      }).format(now), 10
+    );
+    const minutesIntoDay = parisHour * 60 + parisMin;
+    // Courbe : sinusoïdale lente le matin, plus de monde en soirée
+    const progress = Math.min(1, minutesIntoDay / (24 * 60));
+    // Courbe accélérée vers le soir (puissance 0.6)
+    const adjusted = Math.pow(progress, 0.6);
+    return Math.floor(baseTotal * adjusted) + 1;
+  } catch (e) {
+    return Math.floor(baseTotal * 0.5);
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -156,10 +180,10 @@ const legendClose = document.getElementById("legend-close");
 const legendStart = document.getElementById("legend-start");
 const helpBtn     = document.getElementById("help-btn");
 
-poolSpan.textContent = CHARACTERS.length;
+if (poolSpan) poolSpan.textContent = CHARACTERS.length;
 
 // ═══════════════════════════════════════════════
-//  LOCALSTORAGE — sauvegarde de la victoire du jour
+//  LOCALSTORAGE
 // ═══════════════════════════════════════════════
 const STATE_KEY = "dbdle_daily_state";
 
@@ -168,7 +192,6 @@ function loadDailyState() {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return null;
     const state = JSON.parse(raw);
-    // Si l'état est d'un autre jour, on l'ignore
     if (state.dateKey !== currentDateKey) return null;
     return state;
   } catch (e) {
@@ -183,50 +206,13 @@ function saveDailyState(state) {
 }
 
 // ═══════════════════════════════════════════════
-//  SUPABASE — compteur de joueurs
-//  Table attendue : daily_stats
-//    - date_key (text, primary key)
-//    - winners (int, default 0)
-// ═══════════════════════════════════════════════
-
-async function incrementWinnerCount() {
-  if (!supaClient) return null;
-  try {
-    const { data, error } = await supaClient.rpc("increment_winners", {
-      p_date_key: currentDateKey
-    });
-    if (error) { console.warn("Supabase RPC error:", error); return null; }
-    return data;
-  } catch (e) {
-    console.warn("Supabase call failed:", e);
-    return null;
-  }
-}
-
-async function fetchWinnerCount() {
-  if (!supaClient) return null;
-  try {
-    const { data, error } = await supaClient
-      .from("daily_stats")
-      .select("winners")
-      .eq("date_key", currentDateKey)
-      .maybeSingle();
-    if (error) { console.warn("Supabase fetch error:", error); return null; }
-    return data ? data.winners : 0;
-  } catch (e) {
-    console.warn("Supabase fetch failed:", e);
-    return null;
-  }
-}
-
-// ═══════════════════════════════════════════════
 //  MODALE LÉGENDE
 // ═══════════════════════════════════════════════
 const LEGEND_KEY = "dbdle_legend_sober";
 
-function openLegend()  { legendModal.classList.remove("hidden"); }
+function openLegend()  { if (legendModal) legendModal.classList.remove("hidden"); }
 function closeLegend() {
-  legendModal.classList.add("hidden");
+  if (legendModal) legendModal.classList.add("hidden");
   try { localStorage.setItem(LEGEND_KEY, "1"); } catch (e) {}
 }
 
@@ -234,58 +220,63 @@ try {
   if (!localStorage.getItem(LEGEND_KEY)) openLegend();
 } catch (e) { openLegend(); }
 
-legendClose.addEventListener("click", closeLegend);
-legendStart.addEventListener("click", closeLegend);
-helpBtn.addEventListener("click", openLegend);
+if (legendClose) legendClose.addEventListener("click", closeLegend);
+if (legendStart) legendStart.addEventListener("click", closeLegend);
+if (helpBtn)     helpBtn.addEventListener("click", openLegend);
 
-legendModal.addEventListener("click", (e) => {
-  if (e.target === legendModal) closeLegend();
-});
+if (legendModal) {
+  legendModal.addEventListener("click", function(e) {
+    if (e.target === legendModal) closeLegend();
+  });
+}
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !legendModal.classList.contains("hidden")) closeLegend();
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape" && legendModal && !legendModal.classList.contains("hidden")) closeLegend();
 });
 
 // ═══════════════════════════════════════════════
 //  AUTOCOMPLÉTION
 // ═══════════════════════════════════════════════
-input.addEventListener("input", () => {
-  const val = input.value.trim().toLowerCase();
-  if (val.length < 1) { hideSuggestions(); return; }
+if (input) {
+  input.addEventListener("input", function() {
+    const val = input.value.trim().toLowerCase();
+    if (val.length < 1) { hideSuggestions(); return; }
 
-  const matches = CHARACTERS
-    .filter(c => c.name.toLowerCase().includes(val) && !guessedNames.has(c.name))
-    .slice(0, 7);
+    const matches = CHARACTERS
+      .filter(function(c) { return c.name.toLowerCase().indexOf(val) !== -1 && !guessedNames.has(c.name); })
+      .slice(0, 7);
 
-  if (matches.length === 0) { hideSuggestions(); return; }
+    if (matches.length === 0) { hideSuggestions(); return; }
 
-  suggestions.innerHTML = "";
-  matches.forEach(c => {
-    const div = document.createElement("div");
-    div.className = "suggestion-item";
-    div.textContent = c.name;
-    div.addEventListener("click", () => {
-      input.value = c.name;
-      hideSuggestions();
-      submitGuess();
+    suggestions.innerHTML = "";
+    matches.forEach(function(c) {
+      const div = document.createElement("div");
+      div.className = "suggestion-item";
+      div.textContent = c.name;
+      div.addEventListener("click", function() {
+        input.value = c.name;
+        hideSuggestions();
+        submitGuess();
+      });
+      suggestions.appendChild(div);
     });
-    suggestions.appendChild(div);
+    suggestions.classList.remove("hidden");
   });
-  suggestions.classList.remove("hidden");
-});
 
-document.addEventListener("click", e => {
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") submitGuess();
+    if (e.key === "Escape") hideSuggestions();
+  });
+}
+
+document.addEventListener("click", function(e) {
   if (!e.target.closest(".search-box")) hideSuggestions();
 });
 
-input.addEventListener("keydown", e => {
-  if (e.key === "Enter") submitGuess();
-  if (e.key === "Escape") hideSuggestions();
-});
-
-guessBtn.addEventListener("click", submitGuess);
+if (guessBtn) guessBtn.addEventListener("click", submitGuess);
 
 function hideSuggestions() {
+  if (!suggestions) return;
   suggestions.classList.add("hidden");
   suggestions.innerHTML = "";
 }
@@ -293,12 +284,11 @@ function hideSuggestions() {
 // ═══════════════════════════════════════════════
 //  SOUMISSION D'UN ESSAI
 // ═══════════════════════════════════════════════
-async function submitGuess() {
+function submitGuess() {
   if (gameWon) return;
   const name = input.value.trim();
   if (!name) return;
 
-  // Easter egg
   if (isEasterEgg(name)) {
     gameWon = true;
     input.value = "";
@@ -308,15 +298,9 @@ async function submitGuess() {
     return;
   }
 
-  const character = CHARACTERS.find(c => c.name.toLowerCase() === name.toLowerCase());
-  if (!character) {
-    showError("Personnage introuvable !");
-    return;
-  }
-  if (guessedNames.has(character.name)) {
-    showError("Déjà essayé !");
-    return;
-  }
+  const character = CHARACTERS.find(function(c) { return c.name.toLowerCase() === name.toLowerCase(); });
+  if (!character) { showError("Personnage introuvable !"); return; }
+  if (guessedNames.has(character.name)) { showError("Déjà essayé !"); return; }
 
   clearError();
   guessedNames.add(character.name);
@@ -331,7 +315,6 @@ async function submitGuess() {
 
   if (character.name === target.name) {
     gameWon = true;
-    // Sauvegarde la victoire
     saveDailyState({
       dateKey: currentDateKey,
       won: true,
@@ -339,13 +322,10 @@ async function submitGuess() {
       tries: guesses.length,
       guessNames: Array.from(guessedNames)
     });
-    // Incrémente le compteur côté serveur
-    incrementWinnerCount();
     setTimeout(showWin, 600);
     return;
   }
 
-  // Sauvegarde la progression (essais en cours, sans victoire)
   saveDailyState({
     dateKey: currentDateKey,
     won: false,
@@ -364,7 +344,9 @@ function makePlaceholder() {
 // ═══════════════════════════════════════════════
 //  RENDU LIGNE D'ESSAI
 // ═══════════════════════════════════════════════
-function renderGuessRow(character, animate = true) {
+function renderGuessRow(character, animate) {
+  if (animate === undefined) animate = true;
+
   const row = document.createElement("div");
   row.className = "guess-row";
 
@@ -378,9 +360,8 @@ function renderGuessRow(character, animate = true) {
     const img = document.createElement("img");
     img.className = "cell-img";
     img.alt = character.name;
-    img.crossOrigin = "anonymous";
     img.src = character.image;
-    img.onerror = () => { imgWrap.innerHTML = ""; imgWrap.appendChild(makePlaceholder()); };
+    img.onerror = function() { imgWrap.innerHTML = ""; imgWrap.appendChild(makePlaceholder()); };
     imgWrap.appendChild(img);
   } else {
     imgWrap.appendChild(makePlaceholder());
@@ -392,16 +373,16 @@ function renderGuessRow(character, animate = true) {
   nameCell.appendChild(nameSpan);
   row.appendChild(nameCell);
 
-  ATTRIBUTES.forEach((attr, i) => {
+  ATTRIBUTES.forEach(function(attr, i) {
     const cell = buildCell(character, attr);
-    if (animate) cell.style.animationDelay = `${i * 80}ms`;
+    if (animate) cell.style.animationDelay = (i * 80) + "ms";
     else cell.style.animation = "none";
     row.appendChild(cell);
   });
 
   guessesContainer.insertBefore(row, guessesContainer.firstChild);
   if (animate) {
-    requestAnimationFrame(() => row.classList.add("revealed"));
+    requestAnimationFrame(function() { row.classList.add("revealed"); });
   } else {
     row.classList.add("revealed");
     row.style.transition = "none";
@@ -423,7 +404,7 @@ function buildCell(character, attr) {
 
   if (gVal === tVal) cell.classList.add("correct");
   else               cell.classList.add("wrong");
-  cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
+  cell.innerHTML = '<span class="cell-val">' + gVal + '</span>';
   return cell;
 }
 
@@ -447,7 +428,7 @@ function computeGradStop(absDiff, scale) {
 function buildNumericCell(cell, gVal, tVal) {
   if (gVal === tVal) {
     cell.classList.add("correct");
-    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = '<span class="cell-val">' + gVal + '</span>';
     return cell;
   }
   const diff = tVal - gVal;
@@ -456,10 +437,10 @@ function buildNumericCell(cell, gVal, tVal) {
 
   if (diff > 0) {
     cell.classList.add("gradient-up");
-    cell.innerHTML = `<span class="cell-arrow">▲</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = '<span class="cell-arrow">▲</span><span class="cell-val">' + gVal + '</span>';
   } else {
     cell.classList.add("gradient-down");
-    cell.innerHTML = `<span class="cell-arrow">▼</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = '<span class="cell-arrow">▼</span><span class="cell-val">' + gVal + '</span>';
   }
   return cell;
 }
@@ -467,14 +448,14 @@ function buildNumericCell(cell, gVal, tVal) {
 function buildSagaCell(cell, gVal, tVal) {
   if (gVal === tVal) {
     cell.classList.add("correct");
-    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = '<span class="cell-val">' + gVal + '</span>';
     return cell;
   }
   const gIdx = SAGA_ORDER.indexOf(gVal);
   const tIdx = SAGA_ORDER.indexOf(tVal);
   if (gIdx === -1 || tIdx === -1) {
     cell.classList.add("wrong");
-    cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = '<span class="cell-val">' + gVal + '</span>';
     return cell;
   }
   const diff = tIdx - gIdx;
@@ -482,10 +463,10 @@ function buildSagaCell(cell, gVal, tVal) {
   cell.style.setProperty("--grad-stop", stop + "%");
   if (diff > 0) {
     cell.classList.add("gradient-up");
-    cell.innerHTML = `<span class="cell-arrow">▲</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = '<span class="cell-arrow">▲</span><span class="cell-val">' + gVal + '</span>';
   } else {
     cell.classList.add("gradient-down");
-    cell.innerHTML = `<span class="cell-arrow">▼</span><span class="cell-val">${gVal}</span>`;
+    cell.innerHTML = '<span class="cell-arrow">▼</span><span class="cell-val">' + gVal + '</span>';
   }
   return cell;
 }
@@ -494,11 +475,11 @@ function buildMultiCell(cell, gVal, tVal) {
   if (gVal === tVal) {
     cell.classList.add("correct");
   } else {
-    const gP = gVal.split("/").map(s => s.trim());
-    const tP = tVal.split("/").map(s => s.trim());
-    cell.classList.add(gP.some(s => tP.includes(s)) ? "partial" : "wrong");
+    const gP = gVal.split("/").map(function(s) { return s.trim(); });
+    const tP = tVal.split("/").map(function(s) { return s.trim(); });
+    cell.classList.add(gP.some(function(s) { return tP.indexOf(s) !== -1; }) ? "partial" : "wrong");
   }
-  cell.innerHTML = `<span class="cell-val">${gVal}</span>`;
+  cell.innerHTML = '<span class="cell-val">' + gVal + '</span>';
   return cell;
 }
 
@@ -508,7 +489,7 @@ function buildMultiCell(cell, gVal, tVal) {
 function showHint() {
   hintShown = true;
   const firstLetter = target.name.charAt(0).toUpperCase();
-  hintText.textContent = `Le nom commence par « ${firstLetter} »`;
+  hintText.textContent = "Le nom commence par « " + firstLetter + " »";
   hintBox.classList.remove("hidden");
 }
 
@@ -525,15 +506,12 @@ function clearError() { errorMsg.classList.add("hidden"); }
 // ═══════════════════════════════════════════════
 //  VICTOIRE
 // ═══════════════════════════════════════════════
-async function showWin() {
+function showWin() {
   winName.textContent = target.name;
   winTries.textContent = guesses.length;
   winScreen.classList.remove("hidden");
-  // Démarre le timer dans le modal
-  startTimerUpdate(winTimer);
-  // Récupère le nombre de joueurs
-  const count = await fetchWinnerCount();
-  winPlayers.textContent = count === null ? "—" : count.toLocaleString("fr-FR");
+  startTimerUpdate();
+  winPlayers.textContent = getSimulatedPlayerCount(currentDateKey).toLocaleString("fr-FR");
 }
 
 function showEasterWin() {
@@ -541,48 +519,46 @@ function showEasterWin() {
   easterScreen.classList.remove("hidden");
 }
 
-winCloseBtn.addEventListener("click", () => {
-  winScreen.classList.add("hidden");
-  // Affiche le panel "déjà gagné" inline
-  showAlreadyWonPanel();
-});
+if (winCloseBtn) {
+  winCloseBtn.addEventListener("click", function() {
+    winScreen.classList.add("hidden");
+    showAlreadyWonPanel();
+  });
+}
 
-easterCloseBtn.addEventListener("click", () => {
-  easterScreen.classList.add("hidden");
-});
+if (easterCloseBtn) {
+  easterCloseBtn.addEventListener("click", function() {
+    easterScreen.classList.add("hidden");
+  });
+}
 
 // ═══════════════════════════════════════════════
 //  PANEL « DÉJÀ GAGNÉ »
 // ═══════════════════════════════════════════════
-async function showAlreadyWonPanel() {
+function showAlreadyWonPanel() {
   const state = loadDailyState();
   if (!state || !state.won) return;
 
-  // Cache la zone de jeu, affiche le panel inline
   gameArea.classList.add("hidden");
   alreadyWon.classList.remove("hidden");
 
   alreadyName.textContent = state.targetName;
   alreadyTries.textContent = state.tries;
+  alreadyPlayers.textContent = getSimulatedPlayerCount(currentDateKey).toLocaleString("fr-FR");
 
-  startTimerUpdate(alreadyTimer);
-
-  const count = await fetchWinnerCount();
-  alreadyPlayers.textContent = count === null ? "—" : count.toLocaleString("fr-FR");
+  startTimerUpdate();
 }
 
 // ═══════════════════════════════════════════════
 //  TIMER (jusqu'à minuit Paris)
 // ═══════════════════════════════════════════════
 let timerInterval = null;
-function startTimerUpdate(...elements) {
-  // Met à jour tous les éléments timer chaque seconde
+function startTimerUpdate() {
   function tick() {
     const ms = getTimeUntilMidnightParis();
     const formatted = formatTimeLeft(ms);
-    elements.forEach(el => { if (el) el.textContent = formatted; });
-
-    // Si on a passé minuit, on recharge la page pour relancer le jeu
+    if (winTimer)     winTimer.textContent = formatted;
+    if (alreadyTimer) alreadyTimer.textContent = formatted;
     if (ms <= 0) {
       clearInterval(timerInterval);
       location.reload();
@@ -590,19 +566,7 @@ function startTimerUpdate(...elements) {
   }
   tick();
   if (!timerInterval) {
-    timerInterval = setInterval(() => {
-      // Met à jour tous les timers de la page (win + already)
-      const ms = getTimeUntilMidnightParis();
-      const formatted = formatTimeLeft(ms);
-      [winTimer, alreadyTimer].forEach(el => {
-        if (el && el.textContent !== "--:--:--") el.textContent = formatted;
-        else if (el) el.textContent = formatted;
-      });
-      if (ms <= 0) {
-        clearInterval(timerInterval);
-        location.reload();
-      }
-    }, 1000);
+    timerInterval = setInterval(tick, 1000);
   }
 }
 
@@ -613,23 +577,21 @@ function restoreSession() {
   const state = loadDailyState();
   if (!state) return;
 
-  // Si déjà gagné aujourd'hui → afficher le panel
   if (state.won) {
+    // restaure aussi gameWon pour éviter les essais ultérieurs
+    gameWon = true;
     showAlreadyWonPanel();
     return;
   }
 
-  // Sinon : restaurer les essais en cours (sans animation)
   if (state.guessNames && state.guessNames.length > 0) {
     columnsHeader.classList.remove("hidden");
-    // On rejoue dans l'ordre, mais l'insertion se fait en tête → inversons l'ordre
-    const orderedNames = [...state.guessNames];
-    orderedNames.forEach(name => {
-      const c = CHARACTERS.find(x => x.name === name);
+    state.guessNames.forEach(function(name) {
+      const c = CHARACTERS.find(function(x) { return x.name === name; });
       if (c) {
         guessedNames.add(c.name);
         guesses.push(c);
-        renderGuessRow(c, false); // sans animation
+        renderGuessRow(c, false);
       }
     });
     triesSpan.textContent = guesses.length;
@@ -643,5 +605,5 @@ function restoreSession() {
 try {
   restoreSession();
 } catch (e) {
-  console.warn("Restore session failed (non-blocking):", e);
+  console.warn("Restore session failed:", e);
 }
