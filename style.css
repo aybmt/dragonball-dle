@@ -74,7 +74,7 @@ body {
   flex: 1;
 }
 
-/* ─── BOUTON AIDE ─── */
+/* ─── BOUTONS FLOTTANTS (aide, stats) ─── */
 .help-btn {
   position: fixed;
   top: 16px; right: 16px;
@@ -88,7 +88,7 @@ body {
   font-weight: 700;
   font-size: 1.1rem;
   cursor: pointer;
-  transition: background 0.15s, transform 0.15s;
+  transition: background 0.15s, transform 0.15s, border-color 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,8 +97,10 @@ body {
 }
 .help-btn:hover {
   background: var(--panel-light);
+  border-color: var(--orange);
   transform: scale(1.05);
 }
+.stats-btn { right: 62px; }
 
 /* ─── HEADER ─── */
 header {
@@ -115,8 +117,26 @@ h1 {
   margin-bottom: 6px;
   line-height: 1;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+  animation: titleFadeIn 0.7s ease-out both;
 }
-h1 span { color: var(--orange); }
+h1 span {
+  background: linear-gradient(180deg, #ffd76b 0%, var(--orange) 55%, #d96a00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--orange);
+  animation: titleGlow 3.6s ease-in-out 0.7s infinite;
+  display: inline-block;
+}
+
+@keyframes titleFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes titleGlow {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 165, 0, 0)); }
+  50%      { filter: drop-shadow(0 0 14px rgba(255, 165, 0, 0.55)); }
+}
 
 .subtitle {
   font-size: 1rem;
@@ -704,17 +724,273 @@ footer {
   margin-top: auto;
 }
 
+/* ═══════════════════════════════════════════════
+   PORTRAIT GAGNANT + AURA KI
+   ═══════════════════════════════════════════════ */
+
+.winner-portrait {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 4px auto 18px;
+  display: block;
+}
+
+.winner-img,
+.winner-img-fallback {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 50%;
+  border: 3px solid #ffd166;
+  box-shadow:
+    0 0 0 4px rgba(255, 165, 0, 0.18),
+    0 6px 22px rgba(0, 0, 0, 0.55);
+  background: #1a1f2e;
+  animation: winnerPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.winner-img-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.4rem;
+  font-weight: 800;
+  color: var(--orange);
+  font-family: var(--font);
+  letter-spacing: -1px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.winner-aura {
+  position: absolute;
+  inset: -22px;
+  border-radius: 50%;
+  z-index: 0;
+  background: radial-gradient(
+    circle,
+    rgba(255, 220, 120, 0.55) 0%,
+    rgba(255, 165, 0, 0.32) 38%,
+    rgba(255, 100, 0, 0.05) 65%,
+    transparent 78%
+  );
+  filter: blur(6px);
+  animation: kiPulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.winner-sparks {
+  position: absolute;
+  inset: -32px;
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(255, 230, 130, 0.45) 6deg,
+      transparent 14deg,
+      transparent 60deg,
+      rgba(255, 230, 130, 0.35) 66deg,
+      transparent 74deg,
+      transparent 130deg,
+      rgba(255, 230, 130, 0.4) 136deg,
+      transparent 144deg,
+      transparent 210deg,
+      rgba(255, 230, 130, 0.3) 216deg,
+      transparent 224deg,
+      transparent 290deg,
+      rgba(255, 230, 130, 0.38) 296deg,
+      transparent 304deg,
+      transparent 360deg
+    );
+  mask: radial-gradient(circle, transparent 48%, #000 56%, #000 72%, transparent 86%);
+  -webkit-mask: radial-gradient(circle, transparent 48%, #000 56%, #000 72%, transparent 86%);
+  opacity: 0;
+  animation: sparkRays 2.8s ease-out 0.2s 1 forwards;
+}
+
+@keyframes winnerPop {
+  0%   { transform: scale(0.55); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes kiPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.75; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+@keyframes sparkRays {
+  0%   { opacity: 0; transform: rotate(0deg)   scale(0.6); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(140deg) scale(1.2); }
+}
+
+.already-portrait .winner-sparks { display: none; }
+
+/* ═══════════════════════════════════════════════
+   ACTIONS MODALES + BOUTON SECONDAIRE
+   ═══════════════════════════════════════════════ */
+
+.win-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  padding: 10px 22px;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.btn-secondary:hover {
+  background: var(--panel-light);
+  border-color: var(--orange);
+  color: var(--orange);
+  transform: translateY(-1px);
+}
+
+.already-won-panel .btn-secondary { margin-top: 6px; }
+
+/* ═══════════════════════════════════════════════
+   MODALE STATS
+   ═══════════════════════════════════════════════ */
+
+.stats-panel { max-width: 520px; padding-top: 40px; }
+
+.stats-panel h2 { margin-bottom: 18px; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.stat-card-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--orange);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.stat-card-label {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.stats-subheading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.stats-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.dist-label {
+  width: 26px;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.dist-bar-wrap {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  height: 18px;
+  position: relative;
+}
+.dist-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ff8c1a 0%, #ffb347 100%);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  color: #1a1004;
+  font-weight: 800;
+  font-size: 0.75rem;
+  min-width: 26px;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dist-bar.empty {
+  background: transparent;
+  color: var(--text-muted);
+  padding-left: 6px;
+  padding-right: 0;
+  justify-content: flex-start;
+  font-weight: 600;
+}
+.dist-bar.highlight {
+  background: linear-gradient(90deg, #ffd700 0%, #ff8c1a 100%);
+}
+
+.stats-empty {
+  text-align: center;
+  color: var(--text-dim);
+  font-style: italic;
+  padding: 14px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 640px) {
-  .cell { font-size: 0.62rem; padding: 6px 2px; min-height: 56px; }
-  .cell-name { font-size: 0.64rem; }
-  .cell-arrow { font-size: 0.95rem; }
-  .cell-img-wrap { width: 40px; height: 40px; }
-  .col-label { font-size: 0.55rem; letter-spacing: 0.3px; }
+  .cell { font-size: 0.72rem; padding: 6px 3px; min-height: 60px; }
+  .cell-name { font-size: 0.7rem; }
+  .cell-arrow { font-size: 1rem; }
+  .cell-img-wrap { width: 42px; height: 42px; }
+  .col-label { font-size: 0.6rem; letter-spacing: 0.3px; }
   #guess-btn { padding: 12px 16px; font-size: 0.95rem; }
   .guess-row { gap: 3px; }
   .columns-header { gap: 3px; }
   .help-btn { width: 34px; height: 34px; font-size: 1rem; }
+  .stats-btn { right: 56px; }
   .modal-panel { padding: 28px 22px 22px; }
   .modal-panel h2 { font-size: 1.5rem; }
   .legend-cell-demo { width: 76px; font-size: 0.72rem; }
@@ -722,4 +998,6 @@ footer {
   header { padding: 32px 16px 20px; }
   .info-block { min-width: 140px; padding: 8px 14px; }
   .info-value { font-size: 1.2rem; }
+  .winner-portrait { width: 110px; height: 110px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }

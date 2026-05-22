@@ -99,9 +99,49 @@ function formatTimeLeft(ms) {
 }
 
 // ═══════════════════════════════════════════════
-//  COMPTEUR SIMULÉ DÉTERMINISTE
-//  Génère un nombre de joueurs crédible basé sur la date,
-//  qui augmente progressivement au fil de la journée.
+//  COUNTERAPI — Compteur réel de gagnants par jour
+//  Service tiers gratuit, sans clé. Fallback simulé si KO.
+// ═══════════════════════════════════════════════
+const COUNTER_NS = "dragonball-dle-aybmt";
+const COUNTER_FLAG_PREFIX = "dbdle_counted_";
+
+function counterUrl(dateKey, action) {
+  const base = "https://api.counterapi.dev/v1/" + COUNTER_NS + "/" + dateKey;
+  return action ? base + "/" + action : base + "/";
+}
+
+function readCounter(dateKey) {
+  return fetch(counterUrl(dateKey, ""), { cache: "no-store" })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(d) { return d && typeof d.count === "number" ? d.count : null; })
+    .catch(function() { return null; });
+}
+
+function bumpCounter(dateKey) {
+  return fetch(counterUrl(dateKey, "up"), { cache: "no-store" })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(d) { return d && typeof d.count === "number" ? d.count : null; })
+    .catch(function() { return null; });
+}
+
+// Incrémente une seule fois par navigateur/jour, sinon lit.
+function getDailyWinnerCount(dateKey) {
+  const flag = COUNTER_FLAG_PREFIX + dateKey;
+  let alreadyCounted = false;
+  try { alreadyCounted = !!localStorage.getItem(flag); } catch (e) {}
+
+  const promise = alreadyCounted ? readCounter(dateKey) : bumpCounter(dateKey);
+  return promise.then(function(count) {
+    if (count !== null && !alreadyCounted) {
+      try { localStorage.setItem(flag, "1"); } catch (e) {}
+    }
+    if (count === null) return getSimulatedPlayerCount(dateKey);
+    return count;
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  COMPTEUR SIMULÉ (fallback)
 // ═══════════════════════════════════════════════
 
 function getSimulatedPlayerCount(dateKey) {
@@ -135,6 +175,63 @@ function getSimulatedPlayerCount(dateKey) {
 }
 
 // ═══════════════════════════════════════════════
+//  STATS PERSONNELLES (localStorage)
+// ═══════════════════════════════════════════════
+const STATS_KEY = "dbdle_stats_v1";
+
+function defaultStats() {
+  return {
+    gamesPlayed: 0,
+    gamesWon: 0,
+    currentStreak: 0,
+    maxStreak: 0,
+    lastWonDateKey: null,
+    distribution: {}
+  };
+}
+
+function loadStats() {
+  try {
+    const raw = localStorage.getItem(STATS_KEY);
+    if (!raw) return defaultStats();
+    const parsed = JSON.parse(raw);
+    const base = defaultStats();
+    for (const k in base) if (parsed[k] !== undefined) base[k] = parsed[k];
+    if (!base.distribution || typeof base.distribution !== "object") base.distribution = {};
+    return base;
+  } catch (e) { return defaultStats(); }
+}
+
+function saveStats(stats) {
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (e) {}
+}
+
+function previousDateKey(dateKey) {
+  const parts = dateKey.split("-");
+  const d = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2]));
+  d.setUTCDate(d.getUTCDate() - 1);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return y + "-" + m + "-" + day;
+}
+
+function recordWin(tries, dateKey) {
+  const stats = loadStats();
+  if (stats.lastWonDateKey === dateKey) return stats; // idempotent
+  stats.gamesPlayed += 1;
+  stats.gamesWon += 1;
+  if (stats.lastWonDateKey === previousDateKey(dateKey)) stats.currentStreak += 1;
+  else stats.currentStreak = 1;
+  if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
+  stats.lastWonDateKey = dateKey;
+  const bucket = tries >= 10 ? "10+" : String(tries);
+  stats.distribution[bucket] = (stats.distribution[bucket] || 0) + 1;
+  saveStats(stats);
+  return stats;
+}
+
+// ═══════════════════════════════════════════════
 //  ÉTAT
 // ═══════════════════════════════════════════════
 
@@ -162,6 +259,14 @@ const winTries    = document.getElementById("win-tries");
 const winPlayers  = document.getElementById("win-players");
 const winTimer    = document.getElementById("win-timer");
 const winCloseBtn = document.getElementById("win-close-btn");
+const winnerImg   = document.getElementById("winner-img");
+const alreadyImg  = document.getElementById("already-img");
+const winStatsBtn = document.getElementById("win-stats-btn");
+const alreadyStatsBtn = document.getElementById("already-stats-btn");
+const statsBtn    = document.getElementById("stats-btn");
+const statsModal  = document.getElementById("stats-modal");
+const statsClose  = document.getElementById("stats-close");
+const statsCloseBottom = document.getElementById("stats-close-bottom");
 const easterScreen = document.getElementById("easter-screen");
 const easterTargetName = document.getElementById("easter-target-name");
 const easterCloseBtn = document.getElementById("easter-close-btn");
@@ -322,6 +427,7 @@ function submitGuess() {
       tries: guesses.length,
       guessNames: Array.from(guessedNames)
     });
+    recordWin(guesses.length, currentDateKey);
     setTimeout(showWin, 600);
     return;
   }
@@ -506,12 +612,42 @@ function clearError() { errorMsg.classList.add("hidden"); }
 // ═══════════════════════════════════════════════
 //  VICTOIRE
 // ═══════════════════════════════════════════════
+function setWinnerImage(imgEl, character) {
+  if (!imgEl || !character) return;
+  const parent = imgEl.parentNode;
+  // retire un fallback éventuel laissé par un appel précédent
+  const oldFb = parent.querySelector(".winner-img-fallback");
+  if (oldFb) parent.removeChild(oldFb);
+
+  function showFallback() {
+    imgEl.style.display = "none";
+    const fb = document.createElement("div");
+    fb.className = "winner-img-fallback";
+    fb.textContent = (character.name || "?").charAt(0).toUpperCase();
+    parent.appendChild(fb);
+  }
+
+  if (!character.image) { showFallback(); return; }
+  imgEl.style.display = "";
+  imgEl.alt = character.name;
+  imgEl.onerror = showFallback;
+  imgEl.src = character.image;
+}
+
 function showWin() {
   winName.textContent = target.name;
   winTries.textContent = guesses.length;
+  setWinnerImage(winnerImg, target);
   winScreen.classList.remove("hidden");
   startTimerUpdate();
-  winPlayers.textContent = getSimulatedPlayerCount(currentDateKey).toLocaleString("fr-FR");
+  winPlayers.textContent = "…";
+  getDailyWinnerCount(currentDateKey).then(function(count) {
+    if (typeof count === "number") {
+      winPlayers.textContent = count.toLocaleString("fr-FR");
+    } else {
+      winPlayers.textContent = "—";
+    }
+  });
 }
 
 function showEasterWin() {
@@ -544,7 +680,20 @@ function showAlreadyWonPanel() {
 
   alreadyName.textContent = state.targetName;
   alreadyTries.textContent = state.tries;
-  alreadyPlayers.textContent = getSimulatedPlayerCount(currentDateKey).toLocaleString("fr-FR");
+
+  if (alreadyImg) {
+    const ch = CHARACTERS.find(function(c) { return c.name === state.targetName; }) || { name: state.targetName };
+    setWinnerImage(alreadyImg, ch);
+  }
+
+  alreadyPlayers.textContent = "…";
+  getDailyWinnerCount(currentDateKey).then(function(count) {
+    if (typeof count === "number") {
+      alreadyPlayers.textContent = count.toLocaleString("fr-FR");
+    } else {
+      alreadyPlayers.textContent = "—";
+    }
+  });
 
   startTimerUpdate();
 }
@@ -571,6 +720,80 @@ function startTimerUpdate() {
 }
 
 // ═══════════════════════════════════════════════
+//  MODALE STATS
+// ═══════════════════════════════════════════════
+function renderStatsDistribution(stats) {
+  const container = document.getElementById("stats-distribution");
+  if (!container) return;
+
+  const buckets = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"];
+  const counts = buckets.map(function(b) { return stats.distribution[b] || 0; });
+  const total = counts.reduce(function(a, b) { return a + b; }, 0);
+
+  if (total === 0) {
+    container.innerHTML = '<p class="stats-empty">Aucune victoire enregistrée pour l\'instant.</p>';
+    return;
+  }
+
+  const max = Math.max.apply(null, counts);
+
+  container.innerHTML = "";
+  buckets.forEach(function(b, i) {
+    const c = counts[i];
+    const row = document.createElement("div");
+    row.className = "dist-row";
+
+    const label = document.createElement("span");
+    label.className = "dist-label";
+    label.textContent = b;
+    row.appendChild(label);
+
+    const wrap = document.createElement("div");
+    wrap.className = "dist-bar-wrap";
+    const bar = document.createElement("div");
+    bar.className = "dist-bar" + (c === 0 ? " empty" : "");
+    const pct = c === 0 ? 0 : Math.max(8, Math.round((c / max) * 100));
+    bar.style.width = pct + "%";
+    bar.textContent = c;
+    wrap.appendChild(bar);
+    row.appendChild(wrap);
+
+    container.appendChild(row);
+  });
+}
+
+function openStats() {
+  if (!statsModal) return;
+  const stats = loadStats();
+  document.getElementById("stat-played").textContent     = stats.gamesPlayed;
+  document.getElementById("stat-won").textContent        = stats.gamesWon;
+  document.getElementById("stat-streak").textContent     = stats.currentStreak;
+  document.getElementById("stat-maxstreak").textContent  = stats.maxStreak;
+  renderStatsDistribution(stats);
+  statsModal.classList.remove("hidden");
+}
+function closeStats() {
+  if (statsModal) statsModal.classList.add("hidden");
+}
+
+if (statsBtn)        statsBtn.addEventListener("click", openStats);
+if (winStatsBtn)     winStatsBtn.addEventListener("click", function() {
+  winScreen.classList.add("hidden");
+  openStats();
+});
+if (alreadyStatsBtn) alreadyStatsBtn.addEventListener("click", openStats);
+if (statsClose)      statsClose.addEventListener("click", closeStats);
+if (statsCloseBottom)statsCloseBottom.addEventListener("click", closeStats);
+if (statsModal) {
+  statsModal.addEventListener("click", function(e) {
+    if (e.target === statsModal) closeStats();
+  });
+}
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape" && statsModal && !statsModal.classList.contains("hidden")) closeStats();
+});
+
+// ═══════════════════════════════════════════════
 //  RESTAURATION DE LA SESSION
 // ═══════════════════════════════════════════════
 function restoreSession() {
@@ -580,6 +803,8 @@ function restoreSession() {
   if (state.won) {
     // restaure aussi gameWon pour éviter les essais ultérieurs
     gameWon = true;
+    // rattrape les stats si l'utilisateur avait gagné avant l'ajout du tracking
+    recordWin(state.tries || guesses.length || 1, currentDateKey);
     showAlreadyWonPanel();
     return;
   }

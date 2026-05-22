@@ -14,6 +14,13 @@
   <div class="bg-overlay" aria-hidden="true"></div>
 
   <button id="help-btn" class="help-btn" title="Comment jouer" aria-label="Comment jouer">?</button>
+  <button id="stats-btn" class="help-btn stats-btn" title="Statistiques" aria-label="Statistiques">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="6" y1="20" x2="6" y2="12"></line>
+      <line x1="12" y1="20" x2="12" y2="6"></line>
+      <line x1="18" y1="20" x2="18" y2="14"></line>
+    </svg>
+  </button>
 
   <div class="page-wrap">
     <header>
@@ -57,6 +64,10 @@
 
       <div id="already-won" class="already-won-panel hidden">
         <h2>Tu as déjà gagné aujourd'hui !</h2>
+        <div class="winner-portrait already-portrait">
+          <div class="winner-aura"></div>
+          <img id="already-img" class="winner-img" alt="" />
+        </div>
         <p>Tu avais trouvé <strong id="already-name"></strong> en <strong><span id="already-tries"></span> essai(s)</strong>.</p>
         <div class="daily-info">
           <div class="info-block">
@@ -68,11 +79,17 @@
             <span class="info-value timer" id="already-timer">--:--:--</span>
           </div>
         </div>
+        <button id="already-stats-btn" class="btn-secondary">Voir mes statistiques</button>
       </div>
 
       <div id="win-screen" class="overlay hidden">
-        <div class="modal-panel">
+        <div class="modal-panel win-panel">
           <h2>Bien joué !</h2>
+          <div class="winner-portrait">
+            <div class="winner-aura"></div>
+            <div class="winner-sparks"></div>
+            <img id="winner-img" class="winner-img" alt="" />
+          </div>
           <p>Tu as trouvé <strong id="win-name"></strong> en <strong><span id="win-tries"></span> essai(s)</strong>.</p>
           <div class="daily-info">
             <div class="info-block">
@@ -84,7 +101,10 @@
               <span class="info-value timer" id="win-timer">--:--:--</span>
             </div>
           </div>
-          <button id="win-close-btn" class="btn-primary">Fermer</button>
+          <div class="win-actions">
+            <button id="win-stats-btn" class="btn-secondary">Mes stats</button>
+            <button id="win-close-btn" class="btn-primary">Fermer</button>
+          </div>
         </div>
       </div>
 
@@ -104,6 +124,39 @@
     <footer>
       <p>Fan-made — Dragon Ball © Akira Toriyama</p>
     </footer>
+  </div>
+
+  <div id="stats-modal" class="overlay hidden">
+    <div class="modal-panel stats-panel">
+      <button id="stats-close" class="legend-close" aria-label="Fermer">×</button>
+      <h2>Statistiques</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-card-value" id="stat-played">0</span>
+          <span class="stat-card-label">Parties</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-value" id="stat-won">0</span>
+          <span class="stat-card-label">Victoires</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-value" id="stat-streak">0</span>
+          <span class="stat-card-label">Série actuelle</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-value" id="stat-maxstreak">0</span>
+          <span class="stat-card-label">Meilleure série</span>
+        </div>
+      </div>
+
+      <h3 class="stats-subheading">Distribution des essais</h3>
+      <div id="stats-distribution" class="stats-distribution">
+        <p class="stats-empty">Aucune victoire enregistrée pour l'instant.</p>
+      </div>
+
+      <button id="stats-close-bottom" class="btn-primary">Fermer</button>
+    </div>
   </div>
 
   <div id="legend-modal" class="overlay hidden">
