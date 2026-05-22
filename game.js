@@ -1,7 +1,25 @@
 // =============================================
 //  DRAGON BALL DLE — Logique de jeu
+//  • Personnage du jour commun à tous (fuseau Paris)
+//  • Reset à minuit Paris
+//  • Mémorisation de la victoire (localStorage)
+//  • Compteur de joueurs via Supabase (optionnel)
 // =============================================
 
+// ═══════════════════════════════════════════════
+//  CONFIG SUPABASE — À REMPLIR
+//  Si non configuré, le compteur affichera "—"
+//  Voir SUPABASE_SETUP.md pour les instructions
+// ═══════════════════════════════════════════════
+const SUPABASE_URL = "https://xhdldegoccwcmuwnqnak.supabase.co/rest/v1/";       // ex: "https://xxxxx.supabase.co"
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZGxkZWdvY2N3Y211d25xbmFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzgzNzEsImV4cCI6MjA5NTAxNDM3MX0.rVJ4P16QGIM2zNXRuEIkUMucaootUMlXxHmXTfjGz5E";  // clé publique anon
+
+let supabase = null;
+if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// ─── Attributs ───
 const ATTRIBUTES = [
   { key: "sex",     label: "Sexe",    type: "exact" },
   { key: "hair",    label: "Cheveux", type: "exact" },
@@ -12,7 +30,7 @@ const ATTRIBUTES = [
   { key: "serie",   label: "Série",   type: "multi" },
 ];
 
-// ── Easter egg ──
+// ─── Easter egg ───
 const EASTER_EGG_NAME = "Lucas Latraube";
 
 function normalize(str) {
@@ -26,20 +44,81 @@ function isEasterEgg(name) {
   return normalize(name) === normalize(EASTER_EGG_NAME);
 }
 
-// ── Personnage du jour ──
-function getDailyCharacter() {
-  const today = new Date();
-  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  return CHARACTERS[seed % CHARACTERS.length];
+// ═══════════════════════════════════════════════
+//  GESTION DU JOUR (fuseau Europe/Paris)
+// ═══════════════════════════════════════════════
+
+// Retourne une date YYYY-MM-DD basée sur l'heure de Paris
+function getParisDateKey(date = new Date()) {
+  // Intl.DateTimeFormat nous donne l'heure dans le fuseau souhaité
+  const parts = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(date);
+
+  const y = parts.find(p => p.type === "year").value;
+  const m = parts.find(p => p.type === "month").value;
+  const d = parts.find(p => p.type === "day").value;
+  return `${y}-${m}-${d}`;
 }
 
-let target = getDailyCharacter();
+// Hash déterministe de la date → index dans CHARACTERS
+// Utilise un hash simple (FNV-1a) pour bien randomiser
+function hashString(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0; // unsigned
+}
+
+function getDailyCharacter() {
+  const dateKey = getParisDateKey();
+  const index = hashString(dateKey) % CHARACTERS.length;
+  return { character: CHARACTERS[index], dateKey };
+}
+
+// Calcule le temps restant jusqu'à minuit Paris
+function getTimeUntilMidnightParis() {
+  const now = new Date();
+  // Heure actuelle à Paris
+  const parisNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  // Heure locale actuelle (pour calculer l'offset Paris vs local)
+  const localNow = new Date(now.toLocaleString("en-US"));
+  const offsetMs = parisNow.getTime() - localNow.getTime();
+
+  // Construit "minuit prochain à Paris"
+  const nextMidnightParis = new Date(parisNow);
+  nextMidnightParis.setHours(24, 0, 0, 0); // minuit du lendemain
+  // Convertit vers le fuseau UTC absolu en retranchant l'offset
+  const targetUtc = nextMidnightParis.getTime() - offsetMs;
+
+  return Math.max(0, targetUtc - now.getTime());
+}
+
+function formatTimeLeft(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+// ═══════════════════════════════════════════════
+//  ÉTAT
+// ═══════════════════════════════════════════════
+
+const daily = getDailyCharacter();
+let target = daily.character;
+let currentDateKey = daily.dateKey;
+
 let guesses = [];
 let guessedNames = new Set();
 let gameWon = false;
 let hintShown = false;
 
-// ── DOM refs ──
+// ─── DOM refs ───
 const input       = document.getElementById("search-input");
 const suggestions = document.getElementById("suggestions");
 const guessBtn    = document.getElementById("guess-btn");
@@ -51,12 +130,21 @@ const errorMsg    = document.getElementById("error-msg");
 const winScreen   = document.getElementById("win-screen");
 const winName     = document.getElementById("win-name");
 const winTries    = document.getElementById("win-tries");
-const playAgainBtn = document.getElementById("play-again-btn");
+const winPlayers  = document.getElementById("win-players");
+const winTimer    = document.getElementById("win-timer");
+const winCloseBtn = document.getElementById("win-close-btn");
 const easterScreen = document.getElementById("easter-screen");
 const easterTargetName = document.getElementById("easter-target-name");
-const easterPlayAgainBtn = document.getElementById("easter-play-again-btn");
+const easterCloseBtn = document.getElementById("easter-close-btn");
 const hintBox     = document.getElementById("hint-box");
 const hintText    = document.getElementById("hint-text");
+
+const gameArea    = document.getElementById("game-area");
+const alreadyWon  = document.getElementById("already-won");
+const alreadyName = document.getElementById("already-name");
+const alreadyTries= document.getElementById("already-tries");
+const alreadyPlayers = document.getElementById("already-players");
+const alreadyTimer= document.getElementById("already-timer");
 
 const legendModal = document.getElementById("legend-modal");
 const legendClose = document.getElementById("legend-close");
@@ -65,13 +153,77 @@ const helpBtn     = document.getElementById("help-btn");
 
 poolSpan.textContent = CHARACTERS.length;
 
-// ── Modale légende ──
+// ═══════════════════════════════════════════════
+//  LOCALSTORAGE — sauvegarde de la victoire du jour
+// ═══════════════════════════════════════════════
+const STATE_KEY = "dbdle_daily_state";
+
+function loadDailyState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return null;
+    const state = JSON.parse(raw);
+    // Si l'état est d'un autre jour, on l'ignore
+    if (state.dateKey !== currentDateKey) return null;
+    return state;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveDailyState(state) {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  } catch (e) { /* */ }
+}
+
+// ═══════════════════════════════════════════════
+//  SUPABASE — compteur de joueurs
+//  Table attendue : daily_stats
+//    - date_key (text, primary key)
+//    - winners (int, default 0)
+// ═══════════════════════════════════════════════
+
+async function incrementWinnerCount() {
+  if (!supabase) return null;
+  try {
+    // Appel d'une fonction SQL "increment_winners" qu'on va créer côté Supabase
+    const { data, error } = await supabase.rpc("increment_winners", {
+      p_date_key: currentDateKey
+    });
+    if (error) { console.warn("Supabase RPC error:", error); return null; }
+    return data;
+  } catch (e) {
+    console.warn("Supabase call failed:", e);
+    return null;
+  }
+}
+
+async function fetchWinnerCount() {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from("daily_stats")
+      .select("winners")
+      .eq("date_key", currentDateKey)
+      .maybeSingle();
+    if (error) { console.warn("Supabase fetch error:", error); return null; }
+    return data ? data.winners : 0;
+  } catch (e) {
+    console.warn("Supabase fetch failed:", e);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  MODALE LÉGENDE
+// ═══════════════════════════════════════════════
 const LEGEND_KEY = "dbdle_legend_sober";
 
-function openLegend() { legendModal.classList.remove("hidden"); }
+function openLegend()  { legendModal.classList.remove("hidden"); }
 function closeLegend() {
   legendModal.classList.add("hidden");
-  try { localStorage.setItem(LEGEND_KEY, "1"); } catch (e) { /* */ }
+  try { localStorage.setItem(LEGEND_KEY, "1"); } catch (e) {}
 }
 
 try {
@@ -90,7 +242,9 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !legendModal.classList.contains("hidden")) closeLegend();
 });
 
-// ── Autocomplétion ──
+// ═══════════════════════════════════════════════
+//  AUTOCOMPLÉTION
+// ═══════════════════════════════════════════════
 input.addEventListener("input", () => {
   const val = input.value.trim().toLowerCase();
   if (val.length < 1) { hideSuggestions(); return; }
@@ -132,8 +286,10 @@ function hideSuggestions() {
   suggestions.innerHTML = "";
 }
 
-// ── Soumission d'un essai ──
-function submitGuess() {
+// ═══════════════════════════════════════════════
+//  SOUMISSION D'UN ESSAI
+// ═══════════════════════════════════════════════
+async function submitGuess() {
   if (gameWon) return;
   const name = input.value.trim();
   if (!name) return;
@@ -171,9 +327,26 @@ function submitGuess() {
 
   if (character.name === target.name) {
     gameWon = true;
+    // Sauvegarde la victoire
+    saveDailyState({
+      dateKey: currentDateKey,
+      won: true,
+      targetName: target.name,
+      tries: guesses.length,
+      guessNames: Array.from(guessedNames)
+    });
+    // Incrémente le compteur côté serveur
+    incrementWinnerCount();
     setTimeout(showWin, 600);
     return;
   }
+
+  // Sauvegarde la progression (essais en cours, sans victoire)
+  saveDailyState({
+    dateKey: currentDateKey,
+    won: false,
+    guessNames: Array.from(guessedNames)
+  });
 
   if (guesses.length >= 8 && !hintShown) showHint();
 }
@@ -184,8 +357,10 @@ function makePlaceholder() {
   return d;
 }
 
-// ── Rendu d'une ligne ──
-function renderGuessRow(character) {
+// ═══════════════════════════════════════════════
+//  RENDU LIGNE D'ESSAI
+// ═══════════════════════════════════════════════
+function renderGuessRow(character, animate = true) {
   const row = document.createElement("div");
   row.className = "guess-row";
 
@@ -209,19 +384,26 @@ function renderGuessRow(character) {
 
   const nameSpan = document.createElement("span");
   nameSpan.textContent = character.name;
-
   nameCell.appendChild(imgWrap);
   nameCell.appendChild(nameSpan);
   row.appendChild(nameCell);
 
   ATTRIBUTES.forEach((attr, i) => {
     const cell = buildCell(character, attr);
-    cell.style.animationDelay = `${i * 80}ms`;
+    if (animate) cell.style.animationDelay = `${i * 80}ms`;
+    else cell.style.animation = "none";
     row.appendChild(cell);
   });
 
   guessesContainer.insertBefore(row, guessesContainer.firstChild);
-  requestAnimationFrame(() => row.classList.add("revealed"));
+  if (animate) {
+    requestAnimationFrame(() => row.classList.add("revealed"));
+  } else {
+    row.classList.add("revealed");
+    row.style.transition = "none";
+    row.style.opacity = "1";
+    row.style.transform = "none";
+  }
 }
 
 function buildCell(character, attr) {
@@ -316,7 +498,9 @@ function buildMultiCell(cell, gVal, tVal) {
   return cell;
 }
 
-// ── Indice ──
+// ═══════════════════════════════════════════════
+//  INDICE
+// ═══════════════════════════════════════════════
 function showHint() {
   hintShown = true;
   const firstLetter = target.name.charAt(0).toUpperCase();
@@ -324,7 +508,9 @@ function showHint() {
   hintBox.classList.remove("hidden");
 }
 
-// ── Erreur ──
+// ═══════════════════════════════════════════════
+//  ERREUR
+// ═══════════════════════════════════════════════
 function showError(msg) {
   errorMsg.textContent = msg;
   errorMsg.classList.remove("hidden");
@@ -332,11 +518,18 @@ function showError(msg) {
 }
 function clearError() { errorMsg.classList.add("hidden"); }
 
-// ── Victoire ──
-function showWin() {
+// ═══════════════════════════════════════════════
+//  VICTOIRE
+// ═══════════════════════════════════════════════
+async function showWin() {
   winName.textContent = target.name;
   winTries.textContent = guesses.length;
   winScreen.classList.remove("hidden");
+  // Démarre le timer dans le modal
+  startTimerUpdate(winTimer);
+  // Récupère le nombre de joueurs
+  const count = await fetchWinnerCount();
+  winPlayers.textContent = count === null ? "—" : count.toLocaleString("fr-FR");
 }
 
 function showEasterWin() {
@@ -344,22 +537,103 @@ function showEasterWin() {
   easterScreen.classList.remove("hidden");
 }
 
-// ── Rejouer ──
-function resetGame() {
-  const remaining = CHARACTERS.filter(c => c.name !== target.name);
-  target = remaining[Math.floor(Math.random() * remaining.length)];
-  guesses = [];
-  guessedNames = new Set();
-  gameWon = false;
-  hintShown = false;
-  triesSpan.textContent = "0";
-  guessesContainer.innerHTML = "";
-  columnsHeader.classList.add("hidden");
-  hintBox.classList.add("hidden");
+winCloseBtn.addEventListener("click", () => {
   winScreen.classList.add("hidden");
+  // Affiche le panel "déjà gagné" inline
+  showAlreadyWonPanel();
+});
+
+easterCloseBtn.addEventListener("click", () => {
   easterScreen.classList.add("hidden");
-  input.focus();
+});
+
+// ═══════════════════════════════════════════════
+//  PANEL « DÉJÀ GAGNÉ »
+// ═══════════════════════════════════════════════
+async function showAlreadyWonPanel() {
+  const state = loadDailyState();
+  if (!state || !state.won) return;
+
+  // Cache la zone de jeu, affiche le panel inline
+  gameArea.classList.add("hidden");
+  alreadyWon.classList.remove("hidden");
+
+  alreadyName.textContent = state.targetName;
+  alreadyTries.textContent = state.tries;
+
+  startTimerUpdate(alreadyTimer);
+
+  const count = await fetchWinnerCount();
+  alreadyPlayers.textContent = count === null ? "—" : count.toLocaleString("fr-FR");
 }
 
-playAgainBtn.addEventListener("click", resetGame);
-easterPlayAgainBtn.addEventListener("click", resetGame);
+// ═══════════════════════════════════════════════
+//  TIMER (jusqu'à minuit Paris)
+// ═══════════════════════════════════════════════
+let timerInterval = null;
+function startTimerUpdate(...elements) {
+  // Met à jour tous les éléments timer chaque seconde
+  function tick() {
+    const ms = getTimeUntilMidnightParis();
+    const formatted = formatTimeLeft(ms);
+    elements.forEach(el => { if (el) el.textContent = formatted; });
+
+    // Si on a passé minuit, on recharge la page pour relancer le jeu
+    if (ms <= 0) {
+      clearInterval(timerInterval);
+      location.reload();
+    }
+  }
+  tick();
+  if (!timerInterval) {
+    timerInterval = setInterval(() => {
+      // Met à jour tous les timers de la page (win + already)
+      const ms = getTimeUntilMidnightParis();
+      const formatted = formatTimeLeft(ms);
+      [winTimer, alreadyTimer].forEach(el => {
+        if (el && el.textContent !== "--:--:--") el.textContent = formatted;
+        else if (el) el.textContent = formatted;
+      });
+      if (ms <= 0) {
+        clearInterval(timerInterval);
+        location.reload();
+      }
+    }, 1000);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  RESTAURATION DE LA SESSION
+// ═══════════════════════════════════════════════
+function restoreSession() {
+  const state = loadDailyState();
+  if (!state) return;
+
+  // Si déjà gagné aujourd'hui → afficher le panel
+  if (state.won) {
+    showAlreadyWonPanel();
+    return;
+  }
+
+  // Sinon : restaurer les essais en cours (sans animation)
+  if (state.guessNames && state.guessNames.length > 0) {
+    columnsHeader.classList.remove("hidden");
+    // On rejoue dans l'ordre, mais l'insertion se fait en tête → inversons l'ordre
+    const orderedNames = [...state.guessNames];
+    orderedNames.forEach(name => {
+      const c = CHARACTERS.find(x => x.name === name);
+      if (c) {
+        guessedNames.add(c.name);
+        guesses.push(c);
+        renderGuessRow(c, false); // sans animation
+      }
+    });
+    triesSpan.textContent = guesses.length;
+    if (guesses.length >= 8) showHint();
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+restoreSession();

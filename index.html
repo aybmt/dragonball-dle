@@ -10,71 +10,104 @@
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <!-- Fond image + overlay sombre -->
   <div class="bg-image" aria-hidden="true"></div>
   <div class="bg-overlay" aria-hidden="true"></div>
 
   <button id="help-btn" class="help-btn" title="Comment jouer" aria-label="Comment jouer">?</button>
 
-  <header>
-    <h1>Dragon Ball <span>DLE</span></h1>
-    <p class="subtitle">Devine le personnage mystère du jour</p>
-    <div class="header-stats">
-      <span class="stat">Essais : <strong id="tries">0</strong></span>
-      <span class="stat">Personnages : <strong id="pool-count">0</strong></span>
-    </div>
-  </header>
-
-  <main>
-    <div class="search-panel">
-      <div class="search-box">
-        <input type="text" id="search-input" placeholder="Nom du personnage..." autocomplete="off" />
-        <div id="suggestions" class="suggestions hidden"></div>
+  <div class="page-wrap">
+    <header>
+      <h1>Dragon Ball <span>DLE</span></h1>
+      <p class="subtitle">Devine le personnage mystère du jour</p>
+      <div class="header-stats">
+        <span class="stat">Essais : <strong id="tries">0</strong></span>
+        <span class="stat">Personnages : <strong id="pool-count">0</strong></span>
       </div>
-      <button id="guess-btn">Deviner</button>
-    </div>
+    </header>
 
-    <div id="error-msg" class="error-msg hidden"></div>
-
-    <div id="hint-box" class="hint-box hidden">
-      <span id="hint-text"></span>
-    </div>
-
-    <div id="columns-header" class="columns-header hidden">
-      <div class="col-label">Personnage</div>
-      <div class="col-label">Sexe</div>
-      <div class="col-label">Cheveux</div>
-      <div class="col-label">Origine</div>
-      <div class="col-label">Race</div>
-      <div class="col-label">Épisode</div>
-      <div class="col-label">Saga</div>
-      <div class="col-label">Série</div>
-    </div>
-
-    <div id="guesses-container"></div>
-
-    <!-- VICTOIRE -->
-    <div id="win-screen" class="overlay hidden">
-      <div class="modal-panel">
-        <h2>Bien joué !</h2>
-        <p>Tu as trouvé <strong id="win-name"></strong> en <strong><span id="win-tries"></span> essai(s)</strong>.</p>
-        <button id="play-again-btn" class="btn-primary">Rejouer</button>
-      </div>
-    </div>
-
-    <!-- EASTER EGG -->
-    <div id="easter-screen" class="overlay hidden">
-      <div class="modal-panel easter-panel">
-        <h2>Légende !</h2>
-        <p class="easter-tag">Easter Egg</p>
-        <p>Tu as invoqué <strong>Lucas Latraube</strong>.</p>
-        <div class="easter-target-box">
-          Le personnage à deviner était <strong id="easter-target-name"></strong>
+    <main>
+      <div id="game-area">
+        <div class="search-panel">
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder="Nom du personnage..." autocomplete="off" />
+            <div id="suggestions" class="suggestions hidden"></div>
+          </div>
+          <button id="guess-btn">Deviner</button>
         </div>
-        <button id="easter-play-again-btn" class="btn-primary">Rejouer</button>
+
+        <div id="error-msg" class="error-msg hidden"></div>
+
+        <div id="hint-box" class="hint-box hidden">
+          <span id="hint-text"></span>
+        </div>
+
+        <div id="columns-header" class="columns-header hidden">
+          <div class="col-label">Personnage</div>
+          <div class="col-label">Sexe</div>
+          <div class="col-label">Cheveux</div>
+          <div class="col-label">Origine</div>
+          <div class="col-label">Race</div>
+          <div class="col-label">Épisode</div>
+          <div class="col-label">Saga</div>
+          <div class="col-label">Série</div>
+        </div>
+
+        <div id="guesses-container"></div>
       </div>
-    </div>
-  </main>
+
+      <!-- Écran déjà gagné aujourd'hui (affiché si localStorage indique victoire du jour) -->
+      <div id="already-won" class="already-won-panel hidden">
+        <h2>Tu as déjà gagné aujourd'hui !</h2>
+        <p>Tu avais trouvé <strong id="already-name"></strong> en <strong><span id="already-tries"></span> essai(s)</strong>.</p>
+        <div class="daily-info">
+          <div class="info-block">
+            <span class="info-label">Joueurs ayant trouvé</span>
+            <span class="info-value" id="already-players">—</span>
+          </div>
+          <div class="info-block">
+            <span class="info-label">Prochain personnage dans</span>
+            <span class="info-value timer" id="already-timer">--:--:--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VICTOIRE -->
+      <div id="win-screen" class="overlay hidden">
+        <div class="modal-panel">
+          <h2>Bien joué !</h2>
+          <p>Tu as trouvé <strong id="win-name"></strong> en <strong><span id="win-tries"></span> essai(s)</strong>.</p>
+          <div class="daily-info">
+            <div class="info-block">
+              <span class="info-label">Joueurs ayant trouvé aujourd'hui</span>
+              <span class="info-value" id="win-players">—</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Prochain personnage dans</span>
+              <span class="info-value timer" id="win-timer">--:--:--</span>
+            </div>
+          </div>
+          <button id="win-close-btn" class="btn-primary">Fermer</button>
+        </div>
+      </div>
+
+      <!-- EASTER EGG -->
+      <div id="easter-screen" class="overlay hidden">
+        <div class="modal-panel easter-panel">
+          <h2>Légende !</h2>
+          <p class="easter-tag">Easter Egg</p>
+          <p>Tu as invoqué <strong>Lucas Latraube</strong>.</p>
+          <div class="easter-target-box">
+            Le personnage à deviner était <strong id="easter-target-name"></strong>
+          </div>
+          <button id="easter-close-btn" class="btn-primary">Fermer</button>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Fan-made — Dragon Ball © Akira Toriyama</p>
+    </footer>
+  </div>
 
   <!-- LÉGENDE -->
   <div id="legend-modal" class="overlay hidden">
@@ -82,7 +115,7 @@
       <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
       <h2>Comment jouer</h2>
       <p class="legend-intro">
-        Devine le personnage mystère. Chaque case te dit si l'attribut correspond à la cible.
+        Devine le personnage mystère du jour. Chaque case te dit si l'attribut correspond à la cible.
       </p>
 
       <div class="legend-rules">
@@ -93,7 +126,7 @@
 
         <div class="legend-row">
           <div class="legend-cell-demo partial">DBZ / DBS</div>
-          <div class="legend-explain"><strong>Jaune</strong> — Au moins une valeur en commun (Série uniquement).</div>
+          <div class="legend-explain"><strong>Jaune</strong> — Au moins une valeur en commun (Série).</div>
         </div>
 
         <div class="legend-row">
@@ -106,7 +139,7 @@
             <span class="cell-arrow">▲</span>
             <span class="cell-val">40</span>
           </div>
-          <div class="legend-explain"><strong>Flèche ▲</strong> — Pour <em>Épisode</em> et <em>Saga</em>. La cible est plus tardive. Plus la zone verte est grande, plus tu es proche.</div>
+          <div class="legend-explain"><strong>Flèche ▲</strong> — Pour <em>Épisode</em> et <em>Saga</em>. La cible est plus tardive.</div>
         </div>
 
         <div class="legend-row">
@@ -118,14 +151,14 @@
         </div>
       </div>
 
+      <p class="legend-reset">Le personnage change chaque jour à minuit (Paris).</p>
+
       <button id="legend-start" class="btn-primary">C'est parti !</button>
     </div>
   </div>
 
-  <footer>
-    <p>Fan-made — Dragon Ball © Akira Toriyama</p>
-  </footer>
-
+  <!-- Supabase client (depuis CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
   <script src="game.js"></script>
 </body>

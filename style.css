@@ -12,11 +12,11 @@
   --text-muted:   #6c7588;
 
   --orange:       #ff8c1a;
-  --correct:      #4caf50;   /* vert sobre */
+  --correct:      #4caf50;
   --correct-bg:   #2e6b32;
-  --partial:      #f1b211;   /* jaune sobre */
+  --partial:      #f1b211;
   --partial-bg:   #8b6612;
-  --wrong:        #c44545;   /* rouge sobre */
+  --wrong:        #c44545;
   --wrong-bg:     #6e2828;
 
   --radius: 6px;
@@ -28,10 +28,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 *::selection { background: var(--orange); color: #000; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; height: 100%; }
 
 body {
-  background: #0f1320;  /* fallback uni si l'image n'est pas trouvée */
+  background: #0f1320;
   color: var(--text);
   font-family: var(--font);
   font-weight: 500;
@@ -48,21 +48,30 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* fallback : si l'image n'est pas trouvée, dégradé orange→bleu Dragon Ball */
   background-color: #1a1f2e;
-}
-/* Si pas d'image, on a un dégradé doux Dragon Ball */
-.bg-image:not([style]):empty {
-  background:
-    radial-gradient(ellipse at 30% 20%, #ff8c1a33 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, #1a3a8a33 0%, transparent 50%),
-    linear-gradient(135deg, #0f1320 0%, #1a1f2e 100%);
 }
 
 .bg-overlay {
   position: fixed; inset: 0; z-index: 1;
-  background: rgba(8, 12, 22, 0.7);
+  /* Overlay plus léger pour mieux voir le wallpaper */
+  background: linear-gradient(180deg,
+    rgba(8, 12, 22, 0.55) 0%,
+    rgba(8, 12, 22, 0.45) 50%,
+    rgba(8, 12, 22, 0.65) 100%);
   pointer-events: none;
+}
+
+/* ─── PAGE WRAP — footer sticky en bas ─── */
+.page-wrap {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-wrap main {
+  flex: 1;
 }
 
 /* ─── BOUTON AIDE ─── */
@@ -93,7 +102,6 @@ body {
 
 /* ─── HEADER ─── */
 header {
-  position: relative; z-index: 10;
   text-align: center;
   padding: 48px 20px 24px;
 }
@@ -106,17 +114,15 @@ h1 {
   color: var(--text);
   margin-bottom: 6px;
   line-height: 1;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
 }
-h1 span {
-  color: var(--orange);
-}
+h1 span { color: var(--orange); }
 
 .subtitle {
   font-size: 1rem;
   color: var(--text-dim);
   margin-bottom: 16px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
 
 .header-stats {
@@ -141,10 +147,10 @@ h1 span {
 
 /* ─── MAIN ─── */
 main {
-  position: relative; z-index: 10;
   max-width: 1100px;
   margin: 0 auto;
   padding: 12px 16px 60px;
+  width: 100%;
 }
 
 /* ─── BARRE DE RECHERCHE ─── */
@@ -177,9 +183,7 @@ main {
   transition: border-color 0.15s;
 }
 #search-input::placeholder { color: var(--text-muted); }
-#search-input:focus {
-  border-color: var(--orange);
-}
+#search-input:focus { border-color: var(--orange); }
 
 .suggestions {
   position: absolute;
@@ -287,6 +291,7 @@ main {
   letter-spacing: 0.5px;
   color: var(--text-dim);
   padding: 4px 2px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 .col-label:first-child { flex: 1.4; }
 
@@ -301,7 +306,6 @@ main {
 }
 .guess-row.revealed { opacity: 1; transform: translateY(0); }
 
-/* ─── CELLULE GÉNÉRIQUE ─── */
 .cell {
   flex: 1;
   position: relative;
@@ -328,7 +332,6 @@ main {
   100% { transform: rotateX(0); opacity: 1; }
 }
 
-/* ─── CELL NAME (avatar) ─── */
 .cell-name {
   flex: 1.4;
   background: var(--panel-light);
@@ -368,7 +371,6 @@ main {
 }
 .cell-img-placeholder::before { content: "?"; }
 
-/* ─── ÉTATS ─── */
 .cell.correct {
   background: var(--correct-bg);
   border-color: var(--correct);
@@ -385,15 +387,12 @@ main {
   color: #fff;
 }
 
-/* ─── DÉGRADÉ ─── */
 .cell.gradient-up,
 .cell.gradient-down {
   border-color: var(--border-strong);
   color: #fff;
 }
-
 .cell.gradient-up {
-  /* vrai PLUS HAUT : vert en haut, rouge en bas */
   background: linear-gradient(
     to top,
     var(--wrong-bg) 0%,
@@ -426,6 +425,74 @@ main {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
+/* ═══════════════════════════════════════════════
+   PANEL « DÉJÀ GAGNÉ » (inline, pas en overlay)
+   ═══════════════════════════════════════════════ */
+
+.already-won-panel {
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--correct);
+  border-radius: var(--radius);
+  padding: 28px 28px 24px;
+  text-align: center;
+  margin-top: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-soft);
+}
+.already-won-panel.hidden { display: none; }
+
+.already-won-panel h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--correct);
+  margin-bottom: 10px;
+}
+
+.already-won-panel p {
+  font-size: 1rem;
+  color: var(--text);
+  margin-bottom: 22px;
+}
+.already-won-panel p strong { color: var(--orange); font-weight: 700; }
+
+/* ─── DAILY INFO (compteur + timer) ─── */
+.daily-info {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.info-block {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 160px;
+}
+.info-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.info-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--orange);
+  line-height: 1;
+}
+.info-value.timer {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+
 /* ─── OVERLAY MODALES ─── */
 .overlay {
   position: fixed; inset: 0; z-index: 200;
@@ -451,7 +518,7 @@ main {
   text-align: center;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   animation: scaleIn 0.3s ease;
-  max-width: 440px;
+  max-width: 480px;
   width: 100%;
   backdrop-filter: blur(12px);
 }
@@ -498,12 +565,8 @@ main {
 .btn-primary:active { transform: translateY(0); }
 
 /* ─── EASTER EGG ─── */
-.easter-panel {
-  border-color: #b388ff;
-}
-.easter-panel h2 {
-  color: #b388ff;
-}
+.easter-panel { border-color: #b388ff; }
+.easter-panel h2 { color: #b388ff; }
 .easter-tag {
   display: inline-block;
   background: #b388ff;
@@ -528,18 +591,13 @@ main {
   font-size: 0.95rem;
   color: var(--text);
 }
-.easter-target-box strong {
-  color: #b388ff;
-  font-weight: 800;
-}
+.easter-target-box strong { color: #b388ff; font-weight: 800; }
 
-#easter-play-again-btn {
+#easter-close-btn {
   background: #b388ff;
   color: #1a0d33;
 }
-#easter-play-again-btn:hover {
-  background: #c7a2ff;
-}
+#easter-close-btn:hover { background: #c7a2ff; }
 
 /* ─── LÉGENDE ─── */
 .legend-close {
@@ -572,7 +630,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .legend-row {
@@ -601,18 +659,9 @@ main {
   border: 1px solid var(--border);
   color: #fff;
 }
-.legend-cell-demo.correct {
-  background: var(--correct-bg);
-  border-color: var(--correct);
-}
-.legend-cell-demo.partial {
-  background: var(--partial-bg);
-  border-color: var(--partial);
-}
-.legend-cell-demo.wrong {
-  background: var(--wrong-bg);
-  border-color: var(--wrong);
-}
+.legend-cell-demo.correct { background: var(--correct-bg); border-color: var(--correct); }
+.legend-cell-demo.partial { background: var(--partial-bg); border-color: var(--partial); }
+.legend-cell-demo.wrong   { background: var(--wrong-bg); border-color: var(--wrong); }
 .legend-cell-demo.gradient-up {
   background: linear-gradient(to top, var(--wrong-bg) 0%, var(--wrong-bg) 35%, var(--correct-bg) 65%, var(--correct-bg) 100%);
 }
@@ -635,9 +684,16 @@ main {
 .legend-explain strong { color: var(--orange) !important; font-weight: 700; }
 .legend-explain em { font-style: normal; font-weight: 700; color: var(--text); }
 
+.legend-reset {
+  text-align: center;
+  font-size: 0.85rem !important;
+  color: var(--text-dim) !important;
+  font-style: italic;
+  margin-bottom: 20px !important;
+}
+
 /* ─── FOOTER ─── */
 footer {
-  position: relative; z-index: 10;
   text-align: center;
   padding: 18px;
   color: var(--text-muted);
@@ -645,6 +701,7 @@ footer {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(6px);
   border-top: 1px solid var(--border);
+  margin-top: auto;
 }
 
 /* ─── RESPONSIVE ─── */
@@ -663,4 +720,6 @@ footer {
   .legend-cell-demo { width: 76px; font-size: 0.72rem; }
   .legend-explain { font-size: 0.82rem !important; }
   header { padding: 32px 16px 20px; }
+  .info-block { min-width: 140px; padding: 8px 14px; }
+  .info-value { font-size: 1.2rem; }
 }
