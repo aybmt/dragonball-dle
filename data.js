@@ -92,7 +92,7 @@ const CHARACTERS = [
 
   // ════════════ MAJIN / MAGIE ════════════
   { name: "Buu (Innocent)",  sex: "Homme",  hair: "Chauve", origin: "Inconnue",race: "Majin",           episode: 232, saga: "Saga Boo",              serie: "DBZ / DBGT / DBS",      image: "images/buu_innocent.jpg" },
-  { name: "Buu (Super)",     sex: "Homme",  hair: "Chauve", origin: "Inconnue",race: "Majin",           episode: 253, saga: "Saga Boo",              serie: "DBZ",                   image: "images/buu_super.jpg" },
+  { name: "Buu kid",     sex: "Homme",  hair: "Chauve", origin: "Inconnue",race: "Majin",           episode: 253, saga: "Saga Boo",              serie: "DBZ",                   image: "images/buu_kid.jpg" },
   { name: "Babidi",          sex: "Homme",  hair: "Chauve", origin: "Inconnue",race: "Extraterrestre",  episode: 220, saga: "Saga Boo",              serie: "DBZ",                   image: "images/babidi.jpg" },
 
   // ════════════ DIEUX / DIVINS ════════════
