@@ -11,12 +11,17 @@
 //  Si non configuré, le compteur affichera "—"
 //  Voir SUPABASE_SETUP.md pour les instructions
 // ═══════════════════════════════════════════════
-const SUPABASE_URL = "https://xhdldegoccwcmuwnqnak.supabase.co/rest/v1/";       // ex: "https://xxxxx.supabase.co"
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZGxkZWdvY2N3Y211d25xbmFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzgzNzEsImV4cCI6MjA5NTAxNDM3MX0.rVJ4P16QGIM2zNXRuEIkUMucaootUMlXxHmXTfjGz5E";  // clé publique anon
+const SUPABASE_URL = "";       // ex: "https://xxxxx.supabase.co"
+const SUPABASE_ANON_KEY = "";  // clé publique anon
 
-let supabase = null;
-if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supaClient = null;
+try {
+  if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window !== "undefined" && window.supabase && typeof window.supabase.createClient === "function") {
+    supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch (e) {
+  console.warn("Supabase init failed (non-blocking):", e);
+  supaClient = null;
 }
 
 // ─── Attributs ───
@@ -185,10 +190,9 @@ function saveDailyState(state) {
 // ═══════════════════════════════════════════════
 
 async function incrementWinnerCount() {
-  if (!supabase) return null;
+  if (!supaClient) return null;
   try {
-    // Appel d'une fonction SQL "increment_winners" qu'on va créer côté Supabase
-    const { data, error } = await supabase.rpc("increment_winners", {
+    const { data, error } = await supaClient.rpc("increment_winners", {
       p_date_key: currentDateKey
     });
     if (error) { console.warn("Supabase RPC error:", error); return null; }
@@ -200,9 +204,9 @@ async function incrementWinnerCount() {
 }
 
 async function fetchWinnerCount() {
-  if (!supabase) return null;
+  if (!supaClient) return null;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supaClient
       .from("daily_stats")
       .select("winners")
       .eq("date_key", currentDateKey)
@@ -636,4 +640,8 @@ function restoreSession() {
 // ═══════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════
-restoreSession();
+try {
+  restoreSession();
+} catch (e) {
+  console.warn("Restore session failed (non-blocking):", e);
+}
