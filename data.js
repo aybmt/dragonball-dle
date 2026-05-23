@@ -125,7 +125,7 @@ const CHARACTERS = [
   { name: "Omega Shenron",   sex: "Homme",  hair: "Chauve", origin: "Terre",   race: "Dragon Noir",     episode: 59,  saga: "Saga Dragons Maléfiques", serie: "DBGT",                affiliation: "Méchants GT",      image: "images/omega_shenron.jpg" },
 
   // ════════════ DIVERS ════════════
-  { name: "Nolan",         sex: "Puceau", hair: "chauve",  origin: "neuil",   race: "pas de race",          episode: 0,  saga: "arc raiders",            serie: "nn", affiliation: "triso",      image: "images/shenron.jpg" },
+  { name: "Shenron",         sex: "Neutre", hair: "Aucun",  origin: "Terre",   race: "Dragon",          episode: 11,  saga: "Saga Pilaf",            serie: "DB / DBZ / DBGT / DBS", affiliation: "Indépendant",      image: "images/shenron.jpg" },
   { name: "Oolong",          sex: "Homme",  hair: "Aucun",  origin: "Terre",   race: "Anthropomorphe",  episode: 4,   saga: "Saga Pilaf",            serie: "DB / DBZ / DBS",        affiliation: "Famille / Civils", image: "images/oolong.jpg" },
   { name: "Garlic Jr.",      sex: "Homme",  hair: "Chauve", origin: "Terre Sacrée des Kaïô", race: "Extraterrestre", episode: 1,   saga: "Saga Garlic Jr",       serie: "DBZ",                   affiliation: "Démons",           image: "images/garlic_jr.jpg" },
   { name: "Janemba",         sex: "Homme",  hair: "Chauve", origin: "Enfer",   race: "Démon",           episode: 195, saga: "Films DBZ",             serie: "DBZ",                   affiliation: "Démons",           image: "images/janemba.jpg" },

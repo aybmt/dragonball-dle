@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dragon Ball DLE — Quotidien</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="bg-image" aria-hidden="true"></div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <a href="index.html" class="back-btn" title="Menu principal">←</a>
+  <button id="help-btn" class="help-btn" title="Comment jouer" aria-label="Comment jouer">?</button>
+  <button id="stats-btn" class="help-btn stats-btn" title="Statistiques" aria-label="Statistiques">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="6" y1="20" x2="6" y2="12"></line>
+      <line x1="12" y1="20" x2="12" y2="6"></line>
+      <line x1="18" y1="20" x2="18" y2="14"></line>
+    </svg>
+  </button>
+
+  <div class="page-wrap">
+    <header>
+      <h1>Dragon Ball <span>DLE</span></h1>
+      <p class="subtitle">Devine le personnage mystère du jour</p>
+      <div class="header-stats">
+        <span class="stat">Essais : <strong id="tries">0</strong></span>
+        <span class="stat">Personnages : <strong id="pool-count">0</strong></span>
+      </div>
+    </header>
+
+    <main>
+      <div id="game-area">
+        <div class="search-panel">
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder="Nom du personnage..." autocomplete="off" />
+            <div id="suggestions" class="suggestions hidden"></div>
+          </div>
+          <button id="guess-btn">Deviner</button>
+        </div>
+
+        <div id="error-msg" class="error-msg hidden"></div>
+
+        <div id="hint-box" class="hint-box hidden">
+          <span id="hint-text"></span>
+        </div>
+
+        <div id="columns-header" class="columns-header hidden">
+          <div class="col-label">Personnage</div>
+          <div class="col-label">Sexe</div>
+          <div class="col-label">Cheveux</div>
+          <div class="col-label">Origine</div>
+          <div class="col-label">Race</div>
+          <div class="col-label">Affiliation</div>
+          <div class="col-label">Épisode</div>
+          <div class="col-label">Saga</div>
+          <div class="col-label">Série</div>
+        </div>
+
+        <div id="guesses-container"></div>
+      </div>
+
+      <div id="already-won" class="already-won-panel hidden">
+        <h2>Tu as déjà gagné aujourd'hui !</h2>
+        <div class="winner-portrait already-portrait">
+          <div class="winner-aura"></div>
+          <img id="already-img" class="winner-img" alt="" />
+        </div>
+        <p>Tu avais trouvé <strong id="already-name"></strong> en <strong><span id="already-tries"></span> essai(s)</strong>.</p>
+        <div class="daily-info">
+          <div class="info-block">
+            <span class="info-label">Joueurs ayant trouvé</span>
+            <span class="info-value" id="already-players">—</span>
+          </div>
+          <div class="info-block">
+            <span class="info-label">Prochain personnage dans</span>
+            <span class="info-value timer" id="already-timer">--:--:--</span>
+          </div>
+        </div>
+        <button id="already-stats-btn" class="btn-secondary">Voir mes statistiques</button>
+      </div>
+
+      <div id="win-screen" class="overlay hidden">
+        <div class="modal-panel win-panel">
+          <h2 id="win-title">Bien joué !</h2>
+          <div class="winner-portrait">
+            <div class="winner-aura"></div>
+            <div class="winner-sparks"></div>
+            <img id="winner-img" class="winner-img" alt="" />
+          </div>
+          <p>Tu as trouvé <strong id="win-name"></strong> en <strong><span id="win-tries"></span> essai(s)</strong>.</p>
+          <div class="daily-info" id="win-daily-info">
+            <div class="info-block">
+              <span class="info-label">Joueurs ayant trouvé aujourd'hui</span>
+              <span class="info-value" id="win-players">—</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Prochain personnage dans</span>
+              <span class="info-value timer" id="win-timer">--:--:--</span>
+            </div>
+          </div>
+          <div class="win-actions">
+            <button id="win-stats-btn" class="btn-secondary">Mes stats</button>
+            <button id="win-close-btn" class="btn-primary">Fermer</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="easter-screen" class="overlay hidden">
+        <div class="modal-panel easter-panel">
+          <h2>Légende !</h2>
+          <p class="easter-tag">Easter Egg</p>
+          <p>Tu as invoqué <strong>Lucas Latraube</strong>.</p>
+          <div class="easter-target-box">
+            Le personnage à deviner était <strong id="easter-target-name"></strong>
+          </div>
+          <button id="easter-close-btn" class="btn-primary">Fermer</button>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Fan-made — Dragon Ball © Akira Toriyama</p>
+    </footer>
+  </div>
+
+  <div id="stats-modal" class="overlay hidden">
+    <div class="modal-panel stats-panel">
+      <button id="stats-close" class="legend-close" aria-label="Fermer">×</button>
+      <h2>Statistiques</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-card-value" id="stat-played">0</span>
+          <span class="stat-card-label">Parties</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-value" id="stat-won">0</span>
+          <span class="stat-card-label">Victoires</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-value" id="stat-streak">0</span>
+          <span class="stat-card-label">Série actuelle</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-value" id="stat-maxstreak">0</span>
+          <span class="stat-card-label">Meilleure série</span>
+        </div>
+      </div>
+
+      <h3 class="stats-subheading">Distribution des essais</h3>
+      <div id="stats-distribution" class="stats-distribution">
+        <p class="stats-empty">Aucune victoire enregistrée pour l'instant.</p>
+      </div>
+
+      <button id="stats-close-bottom" class="btn-primary">Fermer</button>
+    </div>
+  </div>
+
+  <div id="legend-modal" class="overlay hidden">
+    <div class="modal-panel legend-panel">
+      <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
+      <h2>Comment jouer</h2>
+      <p class="legend-intro">
+        Devine le personnage mystère du jour. Chaque case te dit si l'attribut correspond à la cible.
+      </p>
+
+      <div class="legend-rules">
+        <div class="legend-row">
+          <div class="legend-cell-demo correct">Saiyan</div>
+          <div class="legend-explain"><strong>Vert</strong> — Attribut identique.</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo partial">DBZ / DBS</div>
+          <div class="legend-explain"><strong>Jaune</strong> — Au moins une valeur en commun (Série).</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo wrong">Humain</div>
+          <div class="legend-explain"><strong>Rouge</strong> — Attribut différent.</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo gradient-up">
+            <span class="cell-arrow">▲</span>
+            <span class="cell-val">40</span>
+          </div>
+          <div class="legend-explain"><strong>Flèche ▲</strong> — Pour <em>Épisode</em> et <em>Saga</em>. La cible est plus tardive.</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo gradient-down">
+            <span class="cell-arrow">▼</span>
+            <span class="cell-val">120</span>
+          </div>
+          <div class="legend-explain"><strong>Flèche ▼</strong> — La cible est plus précoce.</div>
+        </div>
+      </div>
+
+      <p class="legend-reset">Le personnage change chaque jour à minuit (Paris).</p>
+
+      <button id="legend-start" class="btn-primary">C'est parti !</button>
+    </div>
+  </div>
+
+  <script>window.INITIAL_MODE = 'daily';</script>
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dragon Ball DLE — Entraînement</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="bg-image" aria-hidden="true"></div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <a href="index.html" class="back-btn" title="Menu principal">←</a>
+  <button id="help-btn" class="help-btn" title="Comment jouer" aria-label="Comment jouer">?</button>
+
+  <div class="page-wrap">
+    <header>
+      <h1>Dragon Ball <span>DLE</span></h1>
+      <p class="subtitle">Mode entraînement</p>
+      <div class="header-stats">
+        <span class="stat">Essais : <strong id="tries">0</strong></span>
+        <span class="stat">Personnages : <strong id="pool-count">0</strong></span>
+        <span class="stat"><span class="chrono-icon">⏱</span> <strong id="timer-display">--:--</strong></span>
+      </div>
+    </header>
+
+    <main>
+      <div id="game-area">
+        <div class="search-panel">
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder="Nom du personnage..." autocomplete="off" />
+            <div id="suggestions" class="suggestions hidden"></div>
+          </div>
+          <button id="guess-btn">Deviner</button>
+        </div>
+
+        <div id="error-msg" class="error-msg hidden"></div>
+
+        <div id="hint-box" class="hint-box hidden">
+          <span id="hint-text"></span>
+        </div>
+
+        <div id="columns-header" class="columns-header hidden">
+          <div class="col-label">Personnage</div>
+          <div class="col-label">Sexe</div>
+          <div class="col-label">Cheveux</div>
+          <div class="col-label">Origine</div>
+          <div class="col-label">Race</div>
+          <div class="col-label">Affiliation</div>
+          <div class="col-label">Épisode</div>
+          <div class="col-label">Saga</div>
+          <div class="col-label">Série</div>
+        </div>
+
+        <div id="guesses-container"></div>
+      </div>
+
+      <div id="win-screen" class="overlay hidden">
+        <div class="modal-panel win-panel">
+          <h2 id="win-title">Trouvé !</h2>
+          <div class="winner-portrait">
+            <div class="winner-aura"></div>
+            <div class="winner-sparks"></div>
+            <img id="winner-img" class="winner-img" alt="" />
+          </div>
+          <p>Tu as trouvé <strong id="win-name"></strong> en <strong><span id="win-tries"></span> essai(s)</strong>.</p>
+          <div class="practice-time-result">
+            Temps : <strong id="win-time">--:--</strong>
+          </div>
+          <p id="win-record-msg" class="win-record-msg hidden">🏆 Nouveau record personnel !</p>
+          <div class="win-actions">
+            <button id="win-practice-again" class="btn-secondary">Nouveau perso</button>
+            <a href="index.html" class="btn-primary">Menu principal</a>
+            <button id="win-close-btn" class="btn-primary">Continuer</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Fan-made — Dragon Ball © Akira Toriyama</p>
+    </footer>
+  </div>
+
+  <div id="legend-modal" class="overlay hidden">
+    <div class="modal-panel legend-panel">
+      <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
+      <h2>Comment jouer</h2>
+      <p class="legend-intro">
+        Devine le personnage mystère. Chaque case te dit si l'attribut correspond à la cible.
+      </p>
+
+      <div class="legend-rules">
+        <div class="legend-row">
+          <div class="legend-cell-demo correct">Saiyan</div>
+          <div class="legend-explain"><strong>Vert</strong> — Attribut identique.</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo partial">DBZ / DBS</div>
+          <div class="legend-explain"><strong>Jaune</strong> — Au moins une valeur en commun (Série).</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo wrong">Humain</div>
+          <div class="legend-explain"><strong>Rouge</strong> — Attribut différent.</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo gradient-up">
+            <span class="cell-arrow">▲</span>
+            <span class="cell-val">40</span>
+          </div>
+          <div class="legend-explain"><strong>Flèche ▲</strong> — Pour <em>Épisode</em> et <em>Saga</em>. La cible est plus tardive.</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo gradient-down">
+            <span class="cell-arrow">▼</span>
+            <span class="cell-val">120</span>
+          </div>
+          <div class="legend-explain"><strong>Flèche ▼</strong> — La cible est plus précoce.</div>
+        </div>
+      </div>
+
+      <p class="legend-reset">Mode entraînement — aucun impact sur ton score quotidien.</p>
+
+      <button id="legend-start" class="btn-primary">C'est parti !</button>
+    </div>
+  </div>
+
+  <script>window.INITIAL_MODE = 'practice';</script>
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
