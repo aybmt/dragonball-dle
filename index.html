@@ -44,6 +44,20 @@
 
         <div id="error-msg" class="error-msg hidden"></div>
 
+        <div id="practice-banner" class="practice-banner hidden">
+          <div class="practice-banner-text">
+            <strong>Mode entraînement</strong> — personnage aléatoire, sans impact sur ton score quotidien.
+          </div>
+          <div class="practice-banner-actions">
+            <button id="practice-new" class="btn-secondary practice-small">Nouveau perso</button>
+            <button id="practice-exit" class="btn-secondary practice-small">Quitter</button>
+          </div>
+        </div>
+
+        <div id="practice-entry" class="practice-entry">
+          <button id="practice-start" class="practice-link" title="Joue avec un personnage aléatoire, sans toucher au quotidien">Mode entraînement</button>
+        </div>
+
         <div id="hint-box" class="hint-box hidden">
           <span id="hint-text"></span>
         </div>
@@ -54,6 +68,7 @@
           <div class="col-label">Cheveux</div>
           <div class="col-label">Origine</div>
           <div class="col-label">Race</div>
+          <div class="col-label">Affiliation</div>
           <div class="col-label">Épisode</div>
           <div class="col-label">Saga</div>
           <div class="col-label">Série</div>
@@ -84,14 +99,14 @@
 
       <div id="win-screen" class="overlay hidden">
         <div class="modal-panel win-panel">
-          <h2>Bien joué !</h2>
+          <h2 id="win-title">Bien joué !</h2>
           <div class="winner-portrait">
             <div class="winner-aura"></div>
             <div class="winner-sparks"></div>
             <img id="winner-img" class="winner-img" alt="" />
           </div>
           <p>Tu as trouvé <strong id="win-name"></strong> en <strong><span id="win-tries"></span> essai(s)</strong>.</p>
-          <div class="daily-info">
+          <div class="daily-info" id="win-daily-info">
             <div class="info-block">
               <span class="info-label">Joueurs ayant trouvé aujourd'hui</span>
               <span class="info-value" id="win-players">—</span>
@@ -101,8 +116,10 @@
               <span class="info-value timer" id="win-timer">--:--:--</span>
             </div>
           </div>
+          <p id="win-practice-note" class="practice-note hidden">Mode entraînement — aucun impact sur ton score quotidien.</p>
           <div class="win-actions">
             <button id="win-stats-btn" class="btn-secondary">Mes stats</button>
+            <button id="win-practice-again" class="btn-secondary hidden">Nouveau perso</button>
             <button id="win-close-btn" class="btn-primary">Fermer</button>
           </div>
         </div>

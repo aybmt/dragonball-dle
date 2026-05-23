@@ -8,13 +8,14 @@
 
 // ─── Attributs ───
 const ATTRIBUTES = [
-  { key: "sex",     label: "Sexe",    type: "exact" },
-  { key: "hair",    label: "Cheveux", type: "exact" },
-  { key: "origin",  label: "Origine", type: "exact" },
-  { key: "race",    label: "Race",    type: "exact" },
-  { key: "episode", label: "Épisode", type: "numeric" },
-  { key: "saga",    label: "Saga",    type: "saga" },
-  { key: "serie",   label: "Série",   type: "multi" },
+  { key: "sex",         label: "Sexe",        type: "exact" },
+  { key: "hair",        label: "Cheveux",     type: "exact" },
+  { key: "origin",      label: "Origine",     type: "exact" },
+  { key: "race",        label: "Race",        type: "exact" },
+  { key: "affiliation", label: "Affiliation", type: "exact" },
+  { key: "episode",     label: "Épisode",     type: "numeric" },
+  { key: "saga",        label: "Saga",        type: "saga" },
+  { key: "serie",       label: "Série",       type: "multi" },
 ];
 
 // ─── Easter egg ───
@@ -244,6 +245,9 @@ let guessedNames = new Set();
 let gameWon = false;
 let hintShown = false;
 
+let isPracticeMode = false;
+let dailySnapshot = null;
+
 // ─── DOM refs ───
 const input       = document.getElementById("search-input");
 const suggestions = document.getElementById("suggestions");
@@ -284,6 +288,16 @@ const legendModal = document.getElementById("legend-modal");
 const legendClose = document.getElementById("legend-close");
 const legendStart = document.getElementById("legend-start");
 const helpBtn     = document.getElementById("help-btn");
+
+const practiceEntry   = document.getElementById("practice-entry");
+const practiceStart   = document.getElementById("practice-start");
+const practiceBanner  = document.getElementById("practice-banner");
+const practiceNewBtn  = document.getElementById("practice-new");
+const practiceExitBtn = document.getElementById("practice-exit");
+const winTitle        = document.getElementById("win-title");
+const winDailyInfo    = document.getElementById("win-daily-info");
+const winPracticeNote = document.getElementById("win-practice-note");
+const winPracticeAgain= document.getElementById("win-practice-again");
 
 if (poolSpan) poolSpan.textContent = CHARACTERS.length;
 
@@ -420,23 +434,27 @@ function submitGuess() {
 
   if (character.name === target.name) {
     gameWon = true;
-    saveDailyState({
-      dateKey: currentDateKey,
-      won: true,
-      targetName: target.name,
-      tries: guesses.length,
-      guessNames: Array.from(guessedNames)
-    });
-    recordWin(guesses.length, currentDateKey);
+    if (!isPracticeMode) {
+      saveDailyState({
+        dateKey: currentDateKey,
+        won: true,
+        targetName: target.name,
+        tries: guesses.length,
+        guessNames: Array.from(guessedNames)
+      });
+      recordWin(guesses.length, currentDateKey);
+    }
     setTimeout(showWin, 600);
     return;
   }
 
-  saveDailyState({
-    dateKey: currentDateKey,
-    won: false,
-    guessNames: Array.from(guessedNames)
-  });
+  if (!isPracticeMode) {
+    saveDailyState({
+      dateKey: currentDateKey,
+      won: false,
+      guessNames: Array.from(guessedNames)
+    });
+  }
 
   if (guesses.length >= 8 && !hintShown) showHint();
 }
@@ -638,6 +656,21 @@ function showWin() {
   winName.textContent = target.name;
   winTries.textContent = guesses.length;
   setWinnerImage(winnerImg, target);
+
+  if (isPracticeMode) {
+    if (winTitle) winTitle.textContent = "Trouvé !";
+    if (winDailyInfo) winDailyInfo.classList.add("hidden");
+    if (winPracticeNote) winPracticeNote.classList.remove("hidden");
+    if (winPracticeAgain) winPracticeAgain.classList.remove("hidden");
+    winScreen.classList.remove("hidden");
+    return;
+  }
+
+  if (winTitle) winTitle.textContent = "Bien joué !";
+  if (winDailyInfo) winDailyInfo.classList.remove("hidden");
+  if (winPracticeNote) winPracticeNote.classList.add("hidden");
+  if (winPracticeAgain) winPracticeAgain.classList.add("hidden");
+
   winScreen.classList.remove("hidden");
   startTimerUpdate();
   winPlayers.textContent = "…";
@@ -658,6 +691,7 @@ function showEasterWin() {
 if (winCloseBtn) {
   winCloseBtn.addEventListener("click", function() {
     winScreen.classList.add("hidden");
+    if (isPracticeMode) { exitPracticeMode(); return; }
     showAlreadyWonPanel();
   });
 }
@@ -718,6 +752,110 @@ function startTimerUpdate() {
     timerInterval = setInterval(tick, 1000);
   }
 }
+
+// ═══════════════════════════════════════════════
+//  MODE ENTRAÎNEMENT
+// ═══════════════════════════════════════════════
+function pickPracticeTarget() {
+  // Tire au sort un perso différent du quotidien (et différent du précédent en pratique)
+  const exclude = new Set([daily.character.name]);
+  if (isPracticeMode && target && target.name) exclude.add(target.name);
+  const pool = CHARACTERS.filter(function(c) { return !exclude.has(c.name); });
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function resetBoard() {
+  guesses = [];
+  guessedNames = new Set();
+  gameWon = false;
+  hintShown = false;
+  if (guessesContainer) guessesContainer.innerHTML = "";
+  if (triesSpan) triesSpan.textContent = "0";
+  if (hintBox) hintBox.classList.add("hidden");
+  if (columnsHeader) columnsHeader.classList.add("hidden");
+  if (errorMsg) errorMsg.classList.add("hidden");
+  if (input) input.value = "";
+  hideSuggestions();
+}
+
+function snapshotDaily() {
+  return {
+    target: target,
+    guesses: guesses.slice(),
+    guessedNames: new Set(guessedNames),
+    gameWon: gameWon,
+    hintShown: hintShown,
+    guessesHTML: guessesContainer ? guessesContainer.innerHTML : "",
+    triesText: triesSpan ? triesSpan.textContent : "0",
+    hintHidden: hintBox ? hintBox.classList.contains("hidden") : true,
+    hintTextContent: hintText ? hintText.textContent : "",
+    headerHidden: columnsHeader ? columnsHeader.classList.contains("hidden") : true,
+    gameAreaHidden: gameArea ? gameArea.classList.contains("hidden") : false,
+    alreadyWonHidden: alreadyWon ? alreadyWon.classList.contains("hidden") : true,
+  };
+}
+
+function enterPracticeMode() {
+  if (isPracticeMode) { startNewPractice(); return; }
+  dailySnapshot = snapshotDaily();
+  isPracticeMode = true;
+  if (practiceEntry)  practiceEntry.classList.add("hidden");
+  if (practiceBanner) practiceBanner.classList.remove("hidden");
+  if (alreadyWon)     alreadyWon.classList.add("hidden");
+  if (gameArea)       gameArea.classList.remove("hidden");
+  startNewPractice();
+}
+
+function startNewPractice() {
+  if (!isPracticeMode) return;
+  target = pickPracticeTarget();
+  resetBoard();
+  if (winScreen) winScreen.classList.add("hidden");
+}
+
+function exitPracticeMode() {
+  if (!isPracticeMode || !dailySnapshot) return;
+  // Restaure l'état quotidien
+  target        = dailySnapshot.target;
+  guesses       = dailySnapshot.guesses;
+  guessedNames  = dailySnapshot.guessedNames;
+  gameWon       = dailySnapshot.gameWon;
+  hintShown     = dailySnapshot.hintShown;
+  if (guessesContainer) guessesContainer.innerHTML = dailySnapshot.guessesHTML;
+  if (triesSpan) triesSpan.textContent = dailySnapshot.triesText;
+  if (hintBox) {
+    if (dailySnapshot.hintHidden) hintBox.classList.add("hidden");
+    else hintBox.classList.remove("hidden");
+  }
+  if (hintText) hintText.textContent = dailySnapshot.hintTextContent;
+  if (columnsHeader) {
+    if (dailySnapshot.headerHidden) columnsHeader.classList.add("hidden");
+    else columnsHeader.classList.remove("hidden");
+  }
+  if (gameArea) {
+    if (dailySnapshot.gameAreaHidden) gameArea.classList.add("hidden");
+    else gameArea.classList.remove("hidden");
+  }
+  if (alreadyWon) {
+    if (dailySnapshot.alreadyWonHidden) alreadyWon.classList.add("hidden");
+    else alreadyWon.classList.remove("hidden");
+  }
+  if (winScreen) winScreen.classList.add("hidden");
+  if (practiceBanner) practiceBanner.classList.add("hidden");
+  if (practiceEntry)  practiceEntry.classList.remove("hidden");
+  if (input) input.value = "";
+  hideSuggestions();
+  isPracticeMode = false;
+  dailySnapshot = null;
+}
+
+if (practiceStart)   practiceStart.addEventListener("click", enterPracticeMode);
+if (practiceNewBtn)  practiceNewBtn.addEventListener("click", startNewPractice);
+if (practiceExitBtn) practiceExitBtn.addEventListener("click", exitPracticeMode);
+if (winPracticeAgain) winPracticeAgain.addEventListener("click", function() {
+  if (winScreen) winScreen.classList.add("hidden");
+  startNewPractice();
+});
 
 // ═══════════════════════════════════════════════
 //  MODALE STATS
