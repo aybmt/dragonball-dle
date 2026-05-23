@@ -731,7 +731,7 @@ function showEasterWin() {
 if (winCloseBtn) {
   winCloseBtn.addEventListener("click", function() {
     winScreen.classList.add("hidden");
-    if (isPracticeMode) { exitPracticeMode(); return; }
+    if (isPracticeMode) { startNewPractice(); return; }
     showAlreadyWonPanel();
   });
 }
@@ -818,34 +818,6 @@ function resetBoard() {
   hideSuggestions();
 }
 
-function snapshotDaily() {
-  return {
-    target: target,
-    guesses: guesses.slice(),
-    guessedNames: new Set(guessedNames),
-    gameWon: gameWon,
-    hintShown: hintShown,
-    guessesHTML: guessesContainer ? guessesContainer.innerHTML : "",
-    triesText: triesSpan ? triesSpan.textContent : "0",
-    hintHidden: hintBox ? hintBox.classList.contains("hidden") : true,
-    hintTextContent: hintText ? hintText.textContent : "",
-    headerHidden: columnsHeader ? columnsHeader.classList.contains("hidden") : true,
-    gameAreaHidden: gameArea ? gameArea.classList.contains("hidden") : false,
-    alreadyWonHidden: alreadyWon ? alreadyWon.classList.contains("hidden") : true,
-  };
-}
-
-function enterPracticeMode() {
-  if (isPracticeMode) { startNewPractice(); return; }
-  dailySnapshot = snapshotDaily();
-  isPracticeMode = true;
-  if (practiceEntry)  practiceEntry.classList.add("hidden");
-  if (practiceBanner) practiceBanner.classList.remove("hidden");
-  if (alreadyWon)     alreadyWon.classList.add("hidden");
-  if (gameArea)       gameArea.classList.remove("hidden");
-  startNewPractice();
-}
-
 function startNewPractice() {
   resetChrono();
   target = pickPracticeTarget();
@@ -853,45 +825,7 @@ function startNewPractice() {
   if (winScreen) winScreen.classList.add("hidden");
 }
 
-function exitPracticeMode() {
-  if (!isPracticeMode || !dailySnapshot) return;
-  // Restaure l'état quotidien
-  target        = dailySnapshot.target;
-  guesses       = dailySnapshot.guesses;
-  guessedNames  = dailySnapshot.guessedNames;
-  gameWon       = dailySnapshot.gameWon;
-  hintShown     = dailySnapshot.hintShown;
-  if (guessesContainer) guessesContainer.innerHTML = dailySnapshot.guessesHTML;
-  if (triesSpan) triesSpan.textContent = dailySnapshot.triesText;
-  if (hintBox) {
-    if (dailySnapshot.hintHidden) hintBox.classList.add("hidden");
-    else hintBox.classList.remove("hidden");
-  }
-  if (hintText) hintText.textContent = dailySnapshot.hintTextContent;
-  if (columnsHeader) {
-    if (dailySnapshot.headerHidden) columnsHeader.classList.add("hidden");
-    else columnsHeader.classList.remove("hidden");
-  }
-  if (gameArea) {
-    if (dailySnapshot.gameAreaHidden) gameArea.classList.add("hidden");
-    else gameArea.classList.remove("hidden");
-  }
-  if (alreadyWon) {
-    if (dailySnapshot.alreadyWonHidden) alreadyWon.classList.add("hidden");
-    else alreadyWon.classList.remove("hidden");
-  }
-  if (winScreen) winScreen.classList.add("hidden");
-  if (practiceBanner) practiceBanner.classList.add("hidden");
-  if (practiceEntry)  practiceEntry.classList.remove("hidden");
-  if (input) input.value = "";
-  hideSuggestions();
-  isPracticeMode = false;
-  dailySnapshot = null;
-}
-
-if (practiceStart)   practiceStart.addEventListener("click", enterPracticeMode);
 if (practiceNewBtn)  practiceNewBtn.addEventListener("click", startNewPractice);
-if (practiceExitBtn) practiceExitBtn.addEventListener("click", exitPracticeMode);
 if (winPracticeAgain) winPracticeAgain.addEventListener("click", function() {
   if (winScreen) winScreen.classList.add("hidden");
   startNewPractice();
@@ -1005,8 +939,8 @@ function restoreSession() {
 // ═══════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════
-try {
-  restoreSession();
-} catch (e) {
-  console.warn("Restore session failed:", e);
+if (isPracticeMode) {
+  startNewPractice();
+} else {
+  try { restoreSession(); } catch(e) { console.warn('Restore session failed:', e); }
 }

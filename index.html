@@ -5,225 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dragon Ball DLE</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
   <div class="bg-image" aria-hidden="true"></div>
   <div class="bg-overlay" aria-hidden="true"></div>
-
-  <button id="help-btn" class="help-btn" title="Comment jouer" aria-label="Comment jouer">?</button>
-  <button id="stats-btn" class="help-btn stats-btn" title="Statistiques" aria-label="Statistiques">
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <line x1="6" y1="20" x2="6" y2="12"></line>
-      <line x1="12" y1="20" x2="12" y2="6"></line>
-      <line x1="18" y1="20" x2="18" y2="14"></line>
-    </svg>
-  </button>
-
-  <div class="page-wrap">
+  <div class="page-wrap hub-wrap">
     <header>
       <h1>Dragon Ball <span>DLE</span></h1>
-      <p class="subtitle">Devine le personnage mystère du jour</p>
-      <div class="header-stats">
-        <span class="stat">Essais : <strong id="tries">0</strong></span>
-        <span class="stat">Personnages : <strong id="pool-count">0</strong></span>
-      </div>
+      <p class="subtitle">Choisissez votre mode de jeu</p>
     </header>
-
-    <main>
-      <div id="game-area">
-        <div class="search-panel">
-          <div class="search-box">
-            <input type="text" id="search-input" placeholder="Nom du personnage..." autocomplete="off" />
-            <div id="suggestions" class="suggestions hidden"></div>
-          </div>
-          <button id="guess-btn">Deviner</button>
-        </div>
-
-        <div id="error-msg" class="error-msg hidden"></div>
-
-        <div id="practice-banner" class="practice-banner hidden">
-          <div class="practice-banner-text">
-            <strong>Mode entraînement</strong> — personnage aléatoire, sans impact sur ton score quotidien.
-          </div>
-          <div class="practice-banner-actions">
-            <button id="practice-new" class="btn-secondary practice-small">Nouveau perso</button>
-            <button id="practice-exit" class="btn-secondary practice-small">Quitter</button>
-          </div>
-        </div>
-
-        <div id="practice-entry" class="practice-entry">
-          <button id="practice-start" class="practice-link" title="Joue avec un personnage aléatoire, sans toucher au quotidien">Mode entraînement</button>
-        </div>
-
-        <div id="hint-box" class="hint-box hidden">
-          <span id="hint-text"></span>
-        </div>
-
-        <div id="columns-header" class="columns-header hidden">
-          <div class="col-label">Personnage</div>
-          <div class="col-label">Sexe</div>
-          <div class="col-label">Cheveux</div>
-          <div class="col-label">Origine</div>
-          <div class="col-label">Race</div>
-          <div class="col-label">Affiliation</div>
-          <div class="col-label">Épisode</div>
-          <div class="col-label">Saga</div>
-          <div class="col-label">Série</div>
-        </div>
-
-        <div id="guesses-container"></div>
-      </div>
-
-      <div id="already-won" class="already-won-panel hidden">
-        <h2>Tu as déjà gagné aujourd'hui !</h2>
-        <div class="winner-portrait already-portrait">
-          <div class="winner-aura"></div>
-          <img id="already-img" class="winner-img" alt="" />
-        </div>
-        <p>Tu avais trouvé <strong id="already-name"></strong> en <strong><span id="already-tries"></span> essai(s)</strong>.</p>
-        <div class="daily-info">
-          <div class="info-block">
-            <span class="info-label">Joueurs ayant trouvé</span>
-            <span class="info-value" id="already-players">—</span>
-          </div>
-          <div class="info-block">
-            <span class="info-label">Prochain personnage dans</span>
-            <span class="info-value timer" id="already-timer">--:--:--</span>
-          </div>
-        </div>
-        <button id="already-stats-btn" class="btn-secondary">Voir mes statistiques</button>
-      </div>
-
-      <div id="win-screen" class="overlay hidden">
-        <div class="modal-panel win-panel">
-          <h2 id="win-title">Bien joué !</h2>
-          <div class="winner-portrait">
-            <div class="winner-aura"></div>
-            <div class="winner-sparks"></div>
-            <img id="winner-img" class="winner-img" alt="" />
-          </div>
-          <p>Tu as trouvé <strong id="win-name"></strong> en <strong><span id="win-tries"></span> essai(s)</strong>.</p>
-          <div class="daily-info" id="win-daily-info">
-            <div class="info-block">
-              <span class="info-label">Joueurs ayant trouvé aujourd'hui</span>
-              <span class="info-value" id="win-players">—</span>
-            </div>
-            <div class="info-block">
-              <span class="info-label">Prochain personnage dans</span>
-              <span class="info-value timer" id="win-timer">--:--:--</span>
-            </div>
-          </div>
-          <p id="win-practice-note" class="practice-note hidden">Mode entraînement — aucun impact sur ton score quotidien.</p>
-          <div class="win-actions">
-            <button id="win-stats-btn" class="btn-secondary">Mes stats</button>
-            <button id="win-practice-again" class="btn-secondary hidden">Nouveau perso</button>
-            <button id="win-close-btn" class="btn-primary">Fermer</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="easter-screen" class="overlay hidden">
-        <div class="modal-panel easter-panel">
-          <h2>Légende !</h2>
-          <p class="easter-tag">Easter Egg</p>
-          <p>Tu as invoqué <strong>Lucas Latraube</strong>.</p>
-          <div class="easter-target-box">
-            Le personnage à deviner était <strong id="easter-target-name"></strong>
-          </div>
-          <button id="easter-close-btn" class="btn-primary">Fermer</button>
-        </div>
+    <main class="hub-main">
+      <div class="modes-grid">
+        <!-- Daily card -->
+        <a href="daily.html" class="mode-card" id="card-daily">
+          <div class="mode-icon">🎯</div>
+          <h2 class="mode-title">DLE Quotidien</h2>
+          <p class="mode-desc">Un personnage mystère par jour. Reviens chaque jour pour un nouveau défi !</p>
+          <div class="mode-status"><span id="daily-status-text">Nouveau personnage disponible !</span></div>
+          <div class="btn-mode">Jouer</div>
+        </a>
+        <!-- Practice card -->
+        <a href="practice.html" class="mode-card" id="card-practice">
+          <div class="mode-icon">⚡</div>
+          <h2 class="mode-title">Entraînement</h2>
+          <p class="mode-desc">Personnage aléatoire, sans impact sur ton score. Bat ton record !</p>
+          <div class="mode-status"><span id="practice-status-text">Prêt à jouer</span></div>
+          <div class="btn-mode">Jouer</div>
+        </a>
+        <!-- Quotes card -->
+        <a href="quotes.html" class="mode-card" id="card-quotes">
+          <div class="mode-icon">💬</div>
+          <h2 class="mode-title">Qui a dit ça ?</h2>
+          <p class="mode-desc">Une citation mythique de l'univers Dragon Ball. Sauras-tu qui l'a prononcée ?</p>
+          <div class="mode-status"><span id="quotes-status-text">Nouvelle citation disponible !</span></div>
+          <div class="btn-mode">Jouer</div>
+        </a>
       </div>
     </main>
-
-    <footer>
-      <p>Fan-made — Dragon Ball © Akira Toriyama</p>
-    </footer>
+    <footer><p>Fan-made — Dragon Ball © Akira Toriyama</p></footer>
   </div>
-
-  <div id="stats-modal" class="overlay hidden">
-    <div class="modal-panel stats-panel">
-      <button id="stats-close" class="legend-close" aria-label="Fermer">×</button>
-      <h2>Statistiques</h2>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-card-value" id="stat-played">0</span>
-          <span class="stat-card-label">Parties</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card-value" id="stat-won">0</span>
-          <span class="stat-card-label">Victoires</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card-value" id="stat-streak">0</span>
-          <span class="stat-card-label">Série actuelle</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card-value" id="stat-maxstreak">0</span>
-          <span class="stat-card-label">Meilleure série</span>
-        </div>
-      </div>
-
-      <h3 class="stats-subheading">Distribution des essais</h3>
-      <div id="stats-distribution" class="stats-distribution">
-        <p class="stats-empty">Aucune victoire enregistrée pour l'instant.</p>
-      </div>
-
-      <button id="stats-close-bottom" class="btn-primary">Fermer</button>
-    </div>
-  </div>
-
-  <div id="legend-modal" class="overlay hidden">
-    <div class="modal-panel legend-panel">
-      <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
-      <h2>Comment jouer</h2>
-      <p class="legend-intro">
-        Devine le personnage mystère du jour. Chaque case te dit si l'attribut correspond à la cible.
-      </p>
-
-      <div class="legend-rules">
-        <div class="legend-row">
-          <div class="legend-cell-demo correct">Saiyan</div>
-          <div class="legend-explain"><strong>Vert</strong> — Attribut identique.</div>
-        </div>
-
-        <div class="legend-row">
-          <div class="legend-cell-demo partial">DBZ / DBS</div>
-          <div class="legend-explain"><strong>Jaune</strong> — Au moins une valeur en commun (Série).</div>
-        </div>
-
-        <div class="legend-row">
-          <div class="legend-cell-demo wrong">Humain</div>
-          <div class="legend-explain"><strong>Rouge</strong> — Attribut différent.</div>
-        </div>
-
-        <div class="legend-row">
-          <div class="legend-cell-demo gradient-up">
-            <span class="cell-arrow">▲</span>
-            <span class="cell-val">40</span>
-          </div>
-          <div class="legend-explain"><strong>Flèche ▲</strong> — Pour <em>Épisode</em> et <em>Saga</em>. La cible est plus tardive.</div>
-        </div>
-
-        <div class="legend-row">
-          <div class="legend-cell-demo gradient-down">
-            <span class="cell-arrow">▼</span>
-            <span class="cell-val">120</span>
-          </div>
-          <div class="legend-explain"><strong>Flèche ▼</strong> — La cible est plus précoce.</div>
-        </div>
-      </div>
-
-      <p class="legend-reset">Le personnage change chaque jour à minuit (Paris).</p>
-
-      <button id="legend-start" class="btn-primary">C'est parti !</button>
-    </div>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="game.js"></script>
+  <script>
+    // Hub status logic
+    function getParisDateKey() {
+      try {
+        const p = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+        return p.find(x=>x.type==='year').value + '-' + p.find(x=>x.type==='month').value + '-' + p.find(x=>x.type==='day').value;
+      } catch(e) { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    }
+    function formatMs(ms) {
+      const s = Math.floor(ms/1000), m = Math.floor(s/60);
+      return String(m).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+    }
+    function timeUntilMidnight() {
+      try {
+        const now = new Date();
+        const paris = new Date(now.toLocaleString('en-US', {timeZone:'Europe/Paris'}));
+        const local = new Date(now.toLocaleString('en-US'));
+        const offset = paris - local;
+        const next = new Date(paris); next.setHours(24,0,0,0);
+        const diff = Math.max(0, (next - paris));
+        const h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
+        return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+      } catch(e) { return '--:--:--'; }
+    }
+    const todayKey = getParisDateKey();
+    // Daily
+    try {
+      const ds = JSON.parse(localStorage.getItem('dbdle_daily_state') || 'null');
+      const el = document.getElementById('daily-status-text');
+      const card = document.getElementById('card-daily');
+      if (ds && ds.dateKey === todayKey) {
+        if (ds.won) {
+          el.textContent = 'Gagné en ' + ds.tries + ' essai(s) ✓';
+          card.classList.add('card-done');
+          const t = document.createElement('span'); t.className='hub-timer'; t.id='hub-daily-timer';
+          document.getElementById('card-daily').querySelector('.mode-status').appendChild(t);
+          (function tick(){ t.textContent = ' · Prochain dans ' + timeUntilMidnight(); setTimeout(tick,1000); })();
+        } else if (ds.guessNames && ds.guessNames.length > 0) {
+          el.textContent = 'En cours — ' + ds.guessNames.length + ' essai(s)';
+          card.classList.add('card-inprogress');
+        }
+      }
+    } catch(e) {}
+    // Practice
+    try {
+      const best = localStorage.getItem('dbdle_practice_best');
+      if (best) document.getElementById('practice-status-text').textContent = 'Record : ' + formatMs(parseInt(best));
+    } catch(e) {}
+    // Quotes
+    try {
+      const qs = JSON.parse(localStorage.getItem('dbdle_quote_' + todayKey) || 'null');
+      const qel = document.getElementById('quotes-status-text');
+      const qcard = document.getElementById('card-quotes');
+      if (qs) {
+        if (qs.solved) { qel.textContent = 'Résolue en ' + qs.tries + ' essai(s) ✓'; qcard.classList.add('card-done'); }
+        else if (qs.failed) { qel.textContent = 'Tentée aujourd\'hui'; qcard.classList.add('card-inprogress'); }
+      }
+    } catch(e) {}
+  </script>
 </body>
 </html>
