@@ -6,6 +6,8 @@
 //  • Compteur de joueurs simulé (déterministe par jour)
 // =============================================
 
+const INITIAL_MODE = window.INITIAL_MODE || 'daily';
+
 // ─── Attributs ───
 const ATTRIBUTES = [
   { key: "sex",         label: "Sexe",        type: "exact" },
@@ -245,8 +247,7 @@ let guessedNames = new Set();
 let gameWon = false;
 let hintShown = false;
 
-let isPracticeMode = false;
-let dailySnapshot = null;
+let isPracticeMode = (INITIAL_MODE === 'practice');
 
 // ─── DOM refs ───
 const input       = document.getElementById("search-input");
@@ -300,6 +301,35 @@ const winPracticeNote = document.getElementById("win-practice-note");
 const winPracticeAgain= document.getElementById("win-practice-again");
 
 if (poolSpan) poolSpan.textContent = CHARACTERS.length;
+
+// ─── Chrono (practice mode) ───
+let chronoInterval = null;
+let chronoStart = null;
+const PRACTICE_BEST_KEY = 'dbdle_practice_best';
+const timerDisplayEl = document.getElementById('timer-display');
+const winTimeEl = document.getElementById('win-time');
+const winRecordMsg = document.getElementById('win-record-msg');
+
+function startChrono() {
+  if (!timerDisplayEl) return;
+  chronoStart = Date.now();
+  chronoInterval = setInterval(function() {
+    timerDisplayEl.textContent = formatChrono(Date.now() - chronoStart);
+  }, 500);
+}
+function stopChrono() {
+  if (chronoInterval) { clearInterval(chronoInterval); chronoInterval = null; }
+  if (!chronoStart) return 0;
+  return Date.now() - chronoStart;
+}
+function resetChrono() {
+  stopChrono(); chronoStart = null;
+  if (timerDisplayEl) timerDisplayEl.textContent = '--:--';
+}
+function formatChrono(ms) {
+  const s = Math.floor(ms / 1000);
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
 
 // ═══════════════════════════════════════════════
 //  LOCALSTORAGE
@@ -424,6 +454,7 @@ function submitGuess() {
   clearError();
   guessedNames.add(character.name);
   guesses.push(character);
+  if (isPracticeMode && guesses.length === 1) startChrono();
   triesSpan.textContent = guesses.length;
 
   columnsHeader.classList.remove("hidden");
@@ -658,11 +689,20 @@ function showWin() {
   setWinnerImage(winnerImg, target);
 
   if (isPracticeMode) {
-    if (winTitle) winTitle.textContent = "Trouvé !";
-    if (winDailyInfo) winDailyInfo.classList.add("hidden");
-    if (winPracticeNote) winPracticeNote.classList.remove("hidden");
-    if (winPracticeAgain) winPracticeAgain.classList.remove("hidden");
-    winScreen.classList.remove("hidden");
+    if (winTitle) winTitle.textContent = 'Trouvé !';
+    if (winDailyInfo) winDailyInfo.classList.add('hidden');
+    if (winPracticeNote) winPracticeNote.classList.remove('hidden');
+    if (winPracticeAgain) winPracticeAgain.classList.remove('hidden');
+    const elapsed = stopChrono();
+    if (winTimeEl) winTimeEl.textContent = formatChrono(elapsed);
+    try {
+      const prevBest = parseInt(localStorage.getItem(PRACTICE_BEST_KEY) || '999999999');
+      if (elapsed > 0 && elapsed < prevBest) {
+        localStorage.setItem(PRACTICE_BEST_KEY, String(elapsed));
+        if (winRecordMsg) winRecordMsg.classList.remove('hidden');
+      }
+    } catch(e) {}
+    winScreen.classList.remove('hidden');
     return;
   }
 
@@ -807,7 +847,7 @@ function enterPracticeMode() {
 }
 
 function startNewPractice() {
-  if (!isPracticeMode) return;
+  resetChrono();
   target = pickPracticeTarget();
   resetBoard();
   if (winScreen) winScreen.classList.add("hidden");
