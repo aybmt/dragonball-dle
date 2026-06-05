@@ -1218,81 +1218,322 @@ footer {
 /* ═══════════════════════════════════════════════
    QUOTES GAME
    ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   MODULE « QUI A DIT ÇA ? »
+   ═══════════════════════════════════════════════ */
 .quote-area {
-  max-width: 640px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
-.quote-bubble {
-  background: var(--panel);
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-  padding: 28px 32px 24px;
-  margin: 0 auto 20px;
-  font-size: 1.08rem;
-  font-style: italic;
-  color: var(--text);
-  line-height: 1.75;
-  text-align: center;
+/* ── Scène : personnage mystère + bulle ── */
+.quote-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.quote-speaker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.q-speaker-avatar {
   position: relative;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 35%, rgba(255,140,26,0.18), rgba(20,25,38,0.95));
+  border: 2px dashed rgba(255, 140, 26, 0.7);
+  box-shadow: 0 0 0 4px rgba(255,140,26,0.08), 0 6px 18px rgba(0,0,0,0.45);
+  overflow: hidden;
+  animation: speakerIdle 2.8s ease-in-out infinite;
+}
+.q-speaker-mark {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--orange);
+  text-shadow: 0 2px 10px rgba(255,140,26,0.55);
+  font-family: var(--font);
+}
+.q-speaker-img,
+.q-speaker-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+.q-speaker-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--orange);
+  background: #1a1f2e;
+}
+.q-speaker-avatar.revealed {
+  border-style: solid;
+  border-color: #ffd166;
+  box-shadow: 0 0 0 4px rgba(255,209,102,0.18), 0 0 26px rgba(255,180,40,0.5);
+  animation: speakerReveal 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.q-speaker-avatar.revealed.lost {
+  border-color: var(--wrong);
+  box-shadow: 0 0 0 4px rgba(196,69,69,0.18), 0 0 22px rgba(196,69,69,0.45);
+}
+.q-speaker-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.q-speaker-avatar.revealed + .q-speaker-label { color: var(--orange); }
+.q-speaker-avatar.revealed.lost + .q-speaker-label { color: var(--wrong); }
+
+@keyframes speakerIdle {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255,140,26,0.08), 0 6px 18px rgba(0,0,0,0.45); }
+  50%      { box-shadow: 0 0 0 4px rgba(255,140,26,0.20), 0 6px 22px rgba(0,0,0,0.5); }
+}
+@keyframes speakerReveal {
+  0%   { transform: rotateY(90deg) scale(0.7); opacity: 0.3; }
+  100% { transform: rotateY(0deg)  scale(1);   opacity: 1; }
+}
+
+/* ── Bulle de dialogue ── */
+.quote-bubble {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(180deg, var(--panel-light), var(--panel));
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  padding: 30px 30px 26px;
+  font-size: 1.12rem;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.7;
+  text-align: center;
   backdrop-filter: blur(8px);
   box-shadow: var(--shadow-soft);
+  animation: fadeIn 0.4s ease both;
 }
+/* Guillemet décoratif */
 .quote-bubble::before {
   content: '\201C';
-  font-size: 5rem;
+  font-size: 4.6rem;
   color: var(--orange);
   position: absolute;
-  top: -14px; left: 14px;
+  top: 2px; left: 16px;
   line-height: 1;
-  opacity: 0.7;
+  opacity: 0.55;
   font-style: normal;
+}
+/* Ergot pointant vers le personnage mystère (au-dessus) */
+.quote-bubble::after {
+  content: '';
+  position: absolute;
+  top: -9px; left: 50%;
+  transform: translateX(-50%);
+  width: 16px; height: 16px;
+  background: var(--panel-light);
+  border-left: 1px solid var(--border-strong);
+  border-top: 1px solid var(--border-strong);
+  border-radius: 3px 0 0 0;
+  rotate: 45deg;
+}
+
+/* ── Barre de progression (6 essais) ── */
+.quote-progress {
+  display: flex;
+  gap: 9px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.q-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border-strong);
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.q-dot.current {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255,140,26,0.18);
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+.q-dot.miss {
+  background: var(--wrong);
+  border-color: var(--wrong);
+}
+.q-dot.hit {
+  background: #ffd166;
+  border-color: #ffd166;
+  box-shadow: 0 0 10px rgba(255,209,102,0.7);
+  transform: scale(1.2);
+}
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255,140,26,0.18); }
+  50%      { box-shadow: 0 0 0 5px rgba(255,140,26,0.28); }
 }
 
 .quote-counter {
   text-align: center;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   font-variant-numeric: tabular-nums;
 }
 .quote-counter span { color: var(--orange); font-weight: 700; }
 
+/* ── Champ de recherche (scopé au module citations) ── */
+#q-search-input {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 500;
+  outline: none;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-soft);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#q-search-input::placeholder { color: var(--text-muted); }
+#q-search-input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255,140,26,0.15), var(--shadow-soft);
+}
+#q-search-input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+#q-guess-btn {
+  padding: 13px 26px;
+  background: var(--orange);
+  border: none;
+  border-radius: var(--radius);
+  color: #1a1004;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: background 0.15s, transform 0.15s;
+  white-space: nowrap;
+}
+#q-guess-btn:hover { background: #ffa540; transform: translateY(-1px); }
+#q-guess-btn:active { transform: translateY(0); }
+#q-guess-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Suggestions : vignette + surlignage clavier */
+#q-suggestions .suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#q-suggestions .suggestion-item.active {
+  background: var(--panel-light);
+  color: var(--orange);
+}
+.suggestion-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top center;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: #1a1f2e;
+}
+
+/* ── Mauvaises réponses ── */
 .quote-wrong-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
   margin-bottom: 16px;
   justify-content: center;
-  min-height: 28px;
+  min-height: 0;
 }
 .quote-wrong-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: var(--wrong-bg);
   border: 1px solid var(--wrong);
   border-radius: 50px;
-  padding: 4px 14px;
+  padding: 5px 14px;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text);
+  animation: fadeIn 0.25s ease both;
+}
+.quote-wrong-chip .chip-x {
+  color: #ff9b9b;
+  font-weight: 800;
 }
 
+/* ── Indices ── */
 .hints-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 18px;
 }
 .hint-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: var(--panel-light);
   border: 1px solid var(--border);
   border-left: 3px solid var(--orange);
   border-radius: var(--radius);
-  padding: 8px 14px;
-  font-size: 0.88rem;
+  padding: 9px 14px;
   color: var(--text);
-  animation: fadeIn 0.3s ease;
+  animation: hintReveal 0.4s ease both;
 }
-.hint-item strong { color: var(--orange); }
+.hint-icon {
+  font-size: 1.25rem;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+}
+.hint-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  text-align: left;
+}
+.hint-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.hint-item strong { color: var(--orange); font-size: 0.96rem; }
+@keyframes hintReveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .quote-game-done {
   text-align: center;
@@ -1305,7 +1546,12 @@ footer {
   .modes-grid { grid-template-columns: 1fr; gap: 14px; }
   .mode-card { padding: 22px 18px 18px; }
   .mode-icon { font-size: 2rem; }
-  .quote-bubble { padding: 24px 20px 20px; font-size: 0.95rem; }
-  .quote-bubble::before { font-size: 3.5rem; top: -10px; }
+  .quote-bubble { padding: 26px 20px 22px; font-size: 1rem; }
+  .quote-bubble::before { font-size: 3.6rem; top: 0; left: 12px; }
   .hub-main { padding: 8px 14px 48px; }
+  .q-speaker-avatar { width: 74px; height: 74px; }
+  .q-speaker-mark { font-size: 2.2rem; }
+  .q-speaker-fallback { font-size: 2rem; }
+  #q-guess-btn { padding: 13px 18px; }
+  .hint-item { padding: 8px 12px; gap: 10px; }
 }

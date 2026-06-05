@@ -24,8 +24,19 @@
 
     <main>
       <div class="quote-area">
-        <div class="quote-bubble" id="quote-bubble">Chargement...</div>
+        <!-- Personnage mystère + bulle de dialogue -->
+        <div class="quote-stage">
+          <div class="quote-speaker">
+            <div class="q-speaker-avatar" id="q-speaker-avatar">
+              <span class="q-speaker-mark">?</span>
+            </div>
+            <div class="q-speaker-label" id="q-speaker-label">Personnage&nbsp;mystère</div>
+          </div>
 
+          <div class="quote-bubble" id="quote-bubble">Chargement…</div>
+        </div>
+
+        <div class="quote-progress" id="quote-progress" aria-label="Progression des essais"></div>
         <div class="quote-counter">Essai <span id="q-current">1</span> / 6</div>
 
         <div id="quote-wrong-list" class="quote-wrong-list"></div>
@@ -34,7 +45,7 @@
 
         <div class="search-panel">
           <div class="search-box">
-            <input type="text" id="q-search-input" placeholder="Nom du personnage..." autocomplete="off" />
+            <input type="text" id="q-search-input" placeholder="Nom du personnage…" autocomplete="off" spellcheck="false" />
             <div id="q-suggestions" class="suggestions hidden"></div>
           </div>
           <button id="q-guess-btn">Deviner</button>

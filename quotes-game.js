@@ -57,12 +57,19 @@ function formatTimeLeft(ms) {
   return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
 }
 
+// Insensible à la casse ET aux accents (« androide » trouve « Androïde »)
 function normalize(str) {
-  return str
+  return String(str)
     .toLowerCase()
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function findCharacterByName(input) {
+  const n = normalize(input);
+  if (!n) return null;
+  return CHARACTERS.find(function(c) { return normalize(c.name) === n; }) || null;
 }
 
 // ─── State ───
@@ -85,7 +92,15 @@ function loadQuoteState() {
   try {
     const raw = localStorage.getItem(QUOTE_STATE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    // Normalisation défensive (anciens états / données corrompues)
+    return {
+      solved: !!parsed.solved,
+      failed: !!parsed.failed,
+      tries: typeof parsed.tries === "number" ? parsed.tries : (Array.isArray(parsed.guessNames) ? parsed.guessNames.length : 0),
+      guessNames: Array.isArray(parsed.guessNames) ? parsed.guessNames.slice() : []
+    };
   } catch (e) { return null; }
 }
 
@@ -98,12 +113,15 @@ function saveQuoteState() {
 // ─── DOM refs ───
 const quoteBubble      = document.getElementById("quote-bubble");
 const qCurrent         = document.getElementById("q-current");
+const qProgress        = document.getElementById("quote-progress");
 const qSearchInput     = document.getElementById("q-search-input");
 const qSuggestions     = document.getElementById("q-suggestions");
 const qGuessBtn        = document.getElementById("q-guess-btn");
 const qErrorMsg        = document.getElementById("q-error-msg");
 const qWrongList       = document.getElementById("quote-wrong-list");
 const hintsContainer   = document.getElementById("hints-container");
+const qSpeakerAvatar   = document.getElementById("q-speaker-avatar");
+const qSpeakerLabel    = document.getElementById("q-speaker-label");
 const qWinOverlay      = document.getElementById("q-win-overlay");
 const qLoseOverlay     = document.getElementById("q-lose-overlay");
 const qWinTries        = document.getElementById("q-win-tries");
@@ -117,56 +135,96 @@ const qLegendModal     = document.getElementById("legend-modal");
 const qLegendClose     = document.getElementById("legend-close");
 const qLegendStart     = document.getElementById("legend-start");
 
-// ─── Hints config ───
+// ─── Hints config (icône + texte, du moins révélateur au plus révélateur) ───
 function getHints(character) {
   if (!character) return [];
-  // Gender label
-  var genderLabel = character.sex === "Homme" ? "masculin" : character.sex === "Femme" ? "féminin" : "neutre";
+  const genderLabel = character.sex === "Homme" ? "masculin" : character.sex === "Femme" ? "féminin" : "neutre";
   return [
-    "Ce personnage apparaît dans <strong>" + character.serie + "</strong>",
-    "Sa race est : <strong>" + character.race + "</strong>",
-    "Son affiliation : <strong>" + character.affiliation + "</strong>",
-    "C'est un personnage <strong>" + genderLabel + "</strong>",
-    "Son nom commence par « <strong>" + character.name.charAt(0).toUpperCase() + "</strong> »",
+    { icon: "📺", label: "Série",       value: character.serie },
+    { icon: "🧬", label: "Race",        value: character.race },
+    { icon: "🛡️", label: "Affiliation", value: character.affiliation },
+    { icon: "⚧",  label: "Genre",       value: genderLabel },
+    { icon: "🔠", label: "Initiale",    value: "« " + character.name.charAt(0).toUpperCase() + " »" }
   ];
 }
 
 // ─── Autocomplete ───
+let activeSuggestion = -1; // index surligné au clavier
+
 function hideSuggestions() {
   if (!qSuggestions) return;
   qSuggestions.classList.add("hidden");
   qSuggestions.innerHTML = "";
+  activeSuggestion = -1;
+}
+
+function getSuggestionEls() {
+  return qSuggestions ? Array.prototype.slice.call(qSuggestions.querySelectorAll(".suggestion-item")) : [];
+}
+
+function highlightSuggestion(idx) {
+  const els = getSuggestionEls();
+  if (!els.length) return;
+  activeSuggestion = (idx + els.length) % els.length;
+  els.forEach(function(el, i) {
+    el.classList.toggle("active", i === activeSuggestion);
+  });
+  els[activeSuggestion].scrollIntoView({ block: "nearest" });
+}
+
+function renderSuggestions() {
+  const val = normalize(qSearchInput.value);
+  if (val.length < 1) { hideSuggestions(); return; }
+
+  const guessedSet = new Set(state.guessNames.map(normalize));
+  const matches = CHARACTERS
+    .filter(function(c) { return normalize(c.name).indexOf(val) !== -1 && !guessedSet.has(normalize(c.name)); })
+    .slice(0, 7);
+
+  if (matches.length === 0) { hideSuggestions(); return; }
+
+  qSuggestions.innerHTML = "";
+  activeSuggestion = -1;
+  matches.forEach(function(c) {
+    const div = document.createElement("div");
+    div.className = "suggestion-item";
+    const img = c.image ? '<img class="suggestion-thumb" src="' + c.image + '" alt="" onerror="this.style.display=\'none\'" />' : '';
+    div.innerHTML = img + '<span>' + c.name + '</span>';
+    div.addEventListener("mousedown", function(e) {
+      e.preventDefault();
+      qSearchInput.value = c.name;
+      hideSuggestions();
+      submitQuoteGuess();
+    });
+    qSuggestions.appendChild(div);
+  });
+  qSuggestions.classList.remove("hidden");
 }
 
 if (qSearchInput) {
-  qSearchInput.addEventListener("input", function() {
-    const val = qSearchInput.value.trim().toLowerCase();
-    if (val.length < 1) { hideSuggestions(); return; }
-
-    const guessedSet = new Set(state.guessNames);
-    const matches = CHARACTERS
-      .filter(function(c) { return c.name.toLowerCase().indexOf(val) !== -1 && !guessedSet.has(c.name); })
-      .slice(0, 7);
-
-    if (matches.length === 0) { hideSuggestions(); return; }
-
-    qSuggestions.innerHTML = "";
-    matches.forEach(function(c) {
-      const div = document.createElement("div");
-      div.className = "suggestion-item";
-      div.textContent = c.name;
-      div.addEventListener("click", function() {
-        qSearchInput.value = c.name;
-        hideSuggestions();
-        submitQuoteGuess();
-      });
-      qSuggestions.appendChild(div);
-    });
-    qSuggestions.classList.remove("hidden");
-  });
+  qSearchInput.addEventListener("input", renderSuggestions);
 
   qSearchInput.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") submitQuoteGuess();
+    const els = getSuggestionEls();
+    const open = qSuggestions && !qSuggestions.classList.contains("hidden") && els.length > 0;
+
+    if (e.key === "ArrowDown") {
+      if (open) { e.preventDefault(); highlightSuggestion(activeSuggestion + 1); }
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      if (open) { e.preventDefault(); highlightSuggestion(activeSuggestion - 1); }
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (open && activeSuggestion >= 0) {
+        qSearchInput.value = els[activeSuggestion].querySelector("span").textContent;
+        hideSuggestions();
+      }
+      submitQuoteGuess();
+      return;
+    }
     if (e.key === "Escape") hideSuggestions();
   });
 }
@@ -178,11 +236,33 @@ document.addEventListener("click", function(e) {
 if (qGuessBtn) qGuessBtn.addEventListener("click", submitQuoteGuess);
 
 // ─── Error handling ───
+let errorTimeout = null;
 function showError(msg) {
   if (!qErrorMsg) return;
   qErrorMsg.textContent = msg;
   qErrorMsg.classList.remove("hidden");
-  setTimeout(function() { qErrorMsg.classList.add("hidden"); }, 2500);
+  if (errorTimeout) clearTimeout(errorTimeout);
+  errorTimeout = setTimeout(function() { qErrorMsg.classList.add("hidden"); }, 2500);
+}
+
+// ─── Progress dots ───
+function renderProgress() {
+  if (!qProgress) return;
+  const wrongCount = state.solved ? state.tries - 1 : state.tries;
+  qProgress.innerHTML = "";
+  for (var i = 0; i < MAX_TRIES; i++) {
+    const dot = document.createElement("span");
+    dot.className = "q-dot";
+    if (i < wrongCount) {
+      dot.classList.add("miss");
+    } else if (state.solved && i === state.tries - 1) {
+      dot.classList.add("hit");
+    } else if (!state.solved && !state.failed && i === state.tries) {
+      dot.classList.add("current");
+    }
+    qProgress.appendChild(dot);
+  }
+  if (qCurrent) qCurrent.textContent = Math.min(state.tries + 1, MAX_TRIES);
 }
 
 // ─── Render wrong guess chip ───
@@ -190,7 +270,7 @@ function addWrongChip(name) {
   if (!qWrongList) return;
   const chip = document.createElement("div");
   chip.className = "quote-wrong-chip";
-  chip.textContent = name;
+  chip.innerHTML = '<span class="chip-x">✗</span> ' + name;
   qWrongList.appendChild(chip);
 }
 
@@ -198,27 +278,65 @@ function addWrongChip(name) {
 function showHintItem(index) {
   if (!hintsContainer || !quoteCharacter) return;
   const hints = getHints(quoteCharacter);
-  if (index >= hints.length) return;
+  if (index < 0 || index >= hints.length) return;
+  const h = hints[index];
   const item = document.createElement("div");
   item.className = "hint-item";
-  item.innerHTML = "Indice " + (index + 1) + " : " + hints[index];
+  item.innerHTML =
+    '<span class="hint-icon">' + h.icon + '</span>' +
+    '<span class="hint-text"><span class="hint-label">' + h.label + '</span>' +
+    '<strong>' + h.value + '</strong></span>';
   hintsContainer.appendChild(item);
 }
 
-// ─── Portrait helper ───
-function setCharacterPortrait(imgEl, character) {
+// ─── Portrait helper (avec fallback initiale si image manquante) ───
+function setPortrait(imgEl, character) {
   if (!imgEl || !character) return;
   const parent = imgEl.parentNode;
-  if (!character.image) {
+  const oldFb = parent.querySelector(".winner-img-fallback");
+  if (oldFb) parent.removeChild(oldFb);
+
+  function showFallback() {
     imgEl.style.display = "none";
-    return;
+    const fb = document.createElement("div");
+    fb.className = "winner-img-fallback";
+    fb.textContent = (character.name || "?").charAt(0).toUpperCase();
+    parent.appendChild(fb);
   }
+
+  if (!character.image) { showFallback(); return; }
   imgEl.style.display = "";
   imgEl.alt = character.name;
-  imgEl.onerror = function() {
-    imgEl.style.display = "none";
-  };
+  imgEl.onerror = showFallback;
   imgEl.src = character.image;
+}
+
+// ─── Révélation inline du « personnage mystère » ───
+function revealSpeaker(character, won) {
+  if (!qSpeakerAvatar) return;
+  qSpeakerAvatar.classList.add("revealed");
+  qSpeakerAvatar.classList.toggle("lost", !won);
+  qSpeakerAvatar.innerHTML = "";
+
+  function fallback() {
+    qSpeakerAvatar.innerHTML = "";
+    const fb = document.createElement("span");
+    fb.className = "q-speaker-fallback";
+    fb.textContent = ((character && character.name) || "?").charAt(0).toUpperCase();
+    qSpeakerAvatar.appendChild(fb);
+  }
+
+  if (character && character.image) {
+    const img = document.createElement("img");
+    img.className = "q-speaker-img";
+    img.alt = character.name;
+    img.onerror = fallback;
+    img.src = character.image;
+    qSpeakerAvatar.appendChild(img);
+  } else {
+    fallback();
+  }
+  if (qSpeakerLabel) qSpeakerLabel.textContent = (character && character.name) || dailyQuote.character;
 }
 
 // ─── Timer ───
@@ -239,7 +357,7 @@ function startTimerUpdate(winTimerEl, loseTimerEl) {
 function showWin() {
   if (!qWinOverlay) return;
   if (qWinTries) qWinTries.textContent = state.tries;
-  setCharacterPortrait(qWinCharImg, quoteCharacter);
+  setPortrait(qWinCharImg, quoteCharacter);
   qWinOverlay.classList.remove("hidden");
   startTimerUpdate(qWinTimer, null);
 }
@@ -248,25 +366,26 @@ function showWin() {
 function showLose() {
   if (!qLoseOverlay) return;
   if (qLoseCharName) qLoseCharName.textContent = dailyQuote.character;
-  setCharacterPortrait(qLoseCharImg, quoteCharacter);
+  setPortrait(qLoseCharImg, quoteCharacter);
   qLoseOverlay.classList.remove("hidden");
   startTimerUpdate(null, qLoseTimer);
 }
 
 // ─── Disable input area ───
 function disableInput() {
-  if (qSearchInput) qSearchInput.disabled = true;
+  if (qSearchInput) { qSearchInput.disabled = true; qSearchInput.placeholder = "Partie terminée"; }
   if (qGuessBtn) qGuessBtn.disabled = true;
+  hideSuggestions();
 }
 
 // ─── Submit guess ───
 function submitQuoteGuess() {
   if (state.solved || state.failed) return;
 
-  const name = qSearchInput ? qSearchInput.value.trim() : "";
-  if (!name) return;
+  const raw = qSearchInput ? qSearchInput.value.trim() : "";
+  if (!raw) { showError("Entre un nom de personnage."); return; }
 
-  const character = CHARACTERS.find(function(c) { return c.name.toLowerCase() === name.toLowerCase(); });
+  const character = findCharacterByName(raw);
   if (!character) { showError("Personnage introuvable !"); return; }
 
   if (state.guessNames.indexOf(character.name) !== -1) {
@@ -280,15 +399,14 @@ function submitQuoteGuess() {
   state.tries += 1;
   state.guessNames.push(character.name);
 
-  // Update counter display
-  if (qCurrent) qCurrent.textContent = Math.min(state.tries + 1, MAX_TRIES);
-
   if (character.name === dailyQuote.character) {
     // Win
     state.solved = true;
     saveQuoteState();
+    renderProgress();
     disableInput();
-    setTimeout(showWin, 400);
+    revealSpeaker(quoteCharacter, true);
+    setTimeout(showWin, 650);
     return;
   }
 
@@ -301,18 +419,20 @@ function submitQuoteGuess() {
   }
 
   saveQuoteState();
+  renderProgress();
 
   if (state.tries >= MAX_TRIES) {
     // Lose
     state.failed = true;
     saveQuoteState();
     disableInput();
-    setTimeout(showLose, 400);
+    revealSpeaker(quoteCharacter, false);
+    setTimeout(showLose, 650);
   }
 }
 
 // ─── Legend modal ───
-const LEGEND_KEY = "dbdle_legend_sober";
+const LEGEND_KEY = "dbdle_legend_quotes";
 
 function openLegend()  { if (qLegendModal) qLegendModal.classList.remove("hidden"); }
 function closeLegend() {
@@ -338,10 +458,7 @@ function restoreQuoteState(saved) {
 
   // Restore wrong chips
   state.guessNames.forEach(function(name) {
-    const ch = CHARACTERS.find(function(c) { return c.name === name; });
-    if (ch && ch.name !== dailyQuote.character) {
-      addWrongChip(ch.name);
-    }
+    if (name !== dailyQuote.character) addWrongChip(name);
   });
 
   // Restore hints (one per wrong guess, up to 5)
@@ -350,16 +467,17 @@ function restoreQuoteState(saved) {
     showHintItem(i);
   }
 
-  // Update counter
-  if (qCurrent) qCurrent.textContent = Math.min(state.tries + 1, MAX_TRIES);
+  renderProgress();
 
   if (state.solved) {
     disableInput();
+    revealSpeaker(quoteCharacter, true);
     showWin();
     return;
   }
   if (state.failed) {
     disableInput();
+    revealSpeaker(quoteCharacter, false);
     showLose();
     return;
   }
@@ -371,7 +489,15 @@ function restoreQuoteState(saved) {
   if (quoteBubble) quoteBubble.textContent = dailyQuote.quote;
 
   const saved = loadQuoteState();
-  if (saved) {
+  if (saved && (saved.solved || saved.failed || saved.guessNames.length > 0)) {
     restoreQuoteState(saved);
+  } else {
+    renderProgress();
+    // Affiche l'aide au tout premier passage
+    try { if (!localStorage.getItem(LEGEND_KEY)) openLegend(); } catch (e) {}
+  }
+
+  if (qSearchInput && !qSearchInput.disabled) {
+    setTimeout(function() { try { qSearchInput.focus(); } catch (e) {} }, 100);
   }
 })();
