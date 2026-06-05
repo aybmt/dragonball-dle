@@ -107,7 +107,7 @@ const CHARACTERS = [
   { name: "Grand Kaïô-shin", sex: "Homme",  hair: "Blanc",  origin: "Monde des Kaïô", race: "Kaïô-shin",         episode: 212, saga: "Saga Boo",                 serie: "DBZ / DBS",             affiliation: "Divinités",        image: "images/grand_kaio_shin.jpg" },
 
   // ════════════ TOURNOI DE LA PUISSANCE / UNIVERS 6 ════════════
-  { name: "Jiren",           sex: "Homme",  hair: "Chauve", origin: "Inconnue", race: "Humanoïde",      episode: 85,  saga: "Tournoi du Pouvoir",    serie: "DBS",                   affiliation: "Pride Troopers",   image: "images/jiren.jpg" },
+  { name: "Jiren",           sex: "Homme",  hair: "Chauve", origin: "Inconnue", race: "Extraterrestre",      episode: 85,  saga: "Tournoi du Pouvoir",    serie: "DBS",                   affiliation: "Pride Troopers",   image: "images/jiren.jpg" },
   { name: "Hit",             sex: "Homme",  hair: "Chauve", origin: "Inconnue", race: "Extraterrestre", episode: 38,  saga: "Saga Univers 6",        serie: "DBS",                   affiliation: "Univers 6",        image: "images/hit.jpg" },
   { name: "Caulifla",        sex: "Femme",  hair: "Noir",   origin: "Sadala",   race: "Saiyan",         episode: 88,  saga: "Tournoi du Pouvoir",    serie: "DBS",                   affiliation: "Univers 6",        image: "images/caulifla.jpg" },
   { name: "Kale",            sex: "Femme",  hair: "Vert",   origin: "Sadala",   race: "Saiyan",         episode: 89,  saga: "Tournoi du Pouvoir",    serie: "DBS",                   affiliation: "Univers 6",        image: "images/kale.jpg" },
