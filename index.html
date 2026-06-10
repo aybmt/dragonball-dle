@@ -41,6 +41,14 @@
           <div class="mode-status"><span id="quotes-status-text">Nouvelle citation disponible !</span></div>
           <div class="btn-mode">Jouer</div>
         </a>
+        <!-- Silhouette card -->
+        <a href="silhouette.html" class="mode-card" id="card-silhouette">
+          <div class="mode-icon">🕵️</div>
+          <h2 class="mode-title">Qui est-ce ?</h2>
+          <p class="mode-desc">Un personnage caché dans l'ombre se révèle peu à peu. Devine sa silhouette !</p>
+          <div class="mode-status"><span id="silhouette-status-text">Nouvelle silhouette disponible !</span></div>
+          <div class="btn-mode">Jouer</div>
+        </a>
       </div>
     </main>
     <footer><p>Fan-made — Dragon Ball © Akira Toriyama</p></footer>
@@ -101,6 +109,18 @@
       if (qs) {
         if (qs.solved) { qel.textContent = 'Résolue en ' + qs.tries + ' essai(s) ✓'; qcard.classList.add('card-done'); }
         else if (qs.failed) { qel.textContent = 'Tentée aujourd\'hui'; qcard.classList.add('card-inprogress'); }
+        else if (qs.guessNames && qs.guessNames.length > 0) { qel.textContent = 'En cours — ' + qs.guessNames.length + ' essai(s)'; qcard.classList.add('card-inprogress'); }
+      }
+    } catch(e) {}
+    // Silhouette
+    try {
+      const ss = JSON.parse(localStorage.getItem('dbdle_silhouette_' + todayKey) || 'null');
+      const sel = document.getElementById('silhouette-status-text');
+      const scard = document.getElementById('card-silhouette');
+      if (ss) {
+        if (ss.solved) { sel.textContent = 'Trouvée en ' + ss.tries + ' essai(s) ✓'; scard.classList.add('card-done'); }
+        else if (ss.failed) { sel.textContent = 'Tentée aujourd\'hui'; scard.classList.add('card-inprogress'); }
+        else if (ss.guessNames && ss.guessNames.length > 0) { sel.textContent = 'En cours — ' + ss.guessNames.length + ' essai(s)'; scard.classList.add('card-inprogress'); }
       }
     } catch(e) {}
   </script>

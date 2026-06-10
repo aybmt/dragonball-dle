@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dragon Ball DLE — Qui est-ce ?</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="bg-image" aria-hidden="true"></div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <a href="index.html" class="back-btn" title="Menu principal">←</a>
+  <button id="help-btn" class="help-btn" title="Comment jouer" aria-label="Comment jouer">?</button>
+
+  <div class="page-wrap">
+    <header>
+      <h1>Dragon Ball <span>DLE</span></h1>
+      <p class="subtitle">Qui est-ce ?</p>
+    </header>
+
+    <main>
+      <div class="quote-area">
+        <!-- Silhouette mystère -->
+        <div class="silh-stage">
+          <div class="silh-frame" id="silh-frame">
+            <img id="silh-img" class="silh-img" alt="Personnage mystère" />
+            <div class="silh-vignette" aria-hidden="true"></div>
+            <span class="silh-mark" aria-hidden="true">?</span>
+          </div>
+          <div class="silh-caption" id="silh-caption">Qui se cache derrière cette silhouette ?</div>
+        </div>
+
+        <div class="quote-progress" id="silh-progress" aria-label="Progression des essais"></div>
+        <div class="quote-counter">Essai <span id="silh-current">1</span> / 6</div>
+
+        <div id="silh-wrong-list" class="quote-wrong-list"></div>
+
+        <div class="search-panel">
+          <div class="search-box">
+            <input type="text" id="silh-search-input" placeholder="Nom du personnage…" autocomplete="off" spellcheck="false" />
+            <div id="silh-suggestions" class="suggestions hidden"></div>
+          </div>
+          <button id="silh-guess-btn">Deviner</button>
+        </div>
+
+        <div id="silh-error-msg" class="error-msg hidden"></div>
+      </div>
+
+      <!-- Win overlay -->
+      <div id="silh-win-overlay" class="overlay hidden">
+        <div class="modal-panel win-panel">
+          <h2>Bien vu !</h2>
+          <div class="winner-portrait">
+            <div class="winner-aura"></div>
+            <div class="winner-sparks"></div>
+            <img id="silh-win-char-img" class="winner-img" alt="" />
+          </div>
+          <p>C'était <strong id="silh-win-char-name"></strong> — trouvé en <strong><span id="silh-win-tries"></span> essai(s)</strong>.</p>
+          <div class="daily-info">
+            <div class="info-block">
+              <span class="info-label">Prochaine silhouette dans</span>
+              <span class="info-value timer" id="silh-win-timer">--:--:--</span>
+            </div>
+          </div>
+          <div class="win-actions">
+            <a href="index.html" class="btn-primary">Menu principal</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lose overlay -->
+      <div id="silh-lose-overlay" class="overlay hidden">
+        <div class="modal-panel win-panel">
+          <h2 style="color: var(--wrong);">Raté !</h2>
+          <div class="winner-portrait">
+            <div class="winner-aura"></div>
+            <img id="silh-lose-char-img" class="winner-img" alt="" />
+          </div>
+          <p>C'était <strong id="silh-lose-char-name"></strong>.</p>
+          <div class="daily-info">
+            <div class="info-block">
+              <span class="info-label">Prochaine silhouette dans</span>
+              <span class="info-value timer" id="silh-lose-timer">--:--:--</span>
+            </div>
+          </div>
+          <div class="win-actions">
+            <a href="index.html" class="btn-primary">Menu principal</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Fan-made — Dragon Ball © Akira Toriyama</p>
+    </footer>
+  </div>
+
+  <div id="legend-modal" class="overlay hidden">
+    <div class="modal-panel legend-panel">
+      <button id="legend-close" class="legend-close" aria-label="Fermer">×</button>
+      <h2>Comment jouer</h2>
+      <p class="legend-intro">
+        Un personnage de l'univers Dragon Ball se cache dans l'ombre. Devine qui c'est !
+      </p>
+
+      <div class="legend-rules">
+        <div class="legend-row">
+          <div class="legend-cell-demo correct" style="width:auto;padding:6px 12px;">6 essais</div>
+          <div class="legend-explain">Tu as droit à <strong>6 tentatives</strong> maximum.</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo partial" style="width:auto;padding:6px 12px;">Révélation</div>
+          <div class="legend-explain">À chaque mauvaise réponse, la silhouette <strong>s'éclaircit</strong> un peu plus.</div>
+        </div>
+
+        <div class="legend-row">
+          <div class="legend-cell-demo wrong" style="width:auto;padding:6px 12px;">Raté</div>
+          <div class="legend-explain">Après 6 erreurs, le personnage est révélé.</div>
+        </div>
+      </div>
+
+      <p class="legend-reset">La silhouette change chaque jour à minuit (Paris).</p>
+
+      <button id="legend-start" class="btn-primary">C'est parti !</button>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="silhouette-game.js"></script>
+</body>
+</html>
