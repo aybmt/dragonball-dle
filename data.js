@@ -87,9 +87,9 @@ const CHARACTERS = [
   // ════════════ ANDROÏDES / CYBORGS ════════════
   { name: "Androïde 17",     sex: "Masculin",  hair: "Noir",   origin: "Terre",   race: "Androïde",        episode: 135, saga: "Saga des Cyborgs",      serie: "DBZ / DBGT / DBS",      affiliation: "Z-Fighters",       image: "images/androide_17.jpg" },
   { name: "Androïde 18",     sex: "Féminin",  hair: "Blond",  origin: "Terre",   race: "Androïde",        episode: 135, saga: "Saga des Cyborgs",      serie: "DBZ / DBGT / DBS",      affiliation: "Z-Fighters",       image: "images/androide_18.jpg" },
-  { name: "Androïde 16",     sex: "Masculin",  hair: "Roux",   origin: "Terre",   race: "Androïde",        episode: 135, saga: "Saga des Cyborgs",      serie: "DBZ",                   affiliation: "Patrouille Rouge", image: "images/androide_16.jpg" },
-  { name: "Androïde 20 (Dr Gero)", sex: "Masculin", hair: "Blanc", origin: "Terre", race: "Androïde",      episode: 132, saga: "Saga des Cyborgs",      serie: "DBZ",                   affiliation: "Patrouille Rouge", image: "images/androide_20_dr_gero.jpg" },
-  { name: "Cell",            sex: "Masculin",  hair: "Chauve", origin: "Terre",   race: "Bio-Androïde",    episode: 140, saga: "Saga Cell",             serie: "DBZ",                   affiliation: "Patrouille Rouge", image: "images/cell.jpg" },
+  { name: "Androïde 16",     sex: "Masculin",  hair: "Roux",   origin: "Terre",   race: "Androïde",        episode: 135, saga: "Saga des Cyborgs",      serie: "DBZ",                   affiliation: "Red Ribbon", image: "images/androide_16.jpg" },
+  { name: "Androïde 20 (Dr Gero)", sex: "Masculin", hair: "Blanc", origin: "Terre", race: "Androïde",      episode: 132, saga: "Saga des Cyborgs",      serie: "DBZ",                   affiliation: "Red Ribbon", image: "images/androide_20_dr_gero.jpg" },
+  { name: "Cell",            sex: "Masculin",  hair: "Chauve", origin: "Terre",   race: "Bio-Androïde",    episode: 140, saga: "Saga Cell",             serie: "DBZ",                   affiliation: "Red Ribbon", image: "images/cell.jpg" },
 
   // ════════════ MAJIN / MAGIE ════════════
   { name: "Buu (Innocent)",  sex: "Masculin",  hair: "Chauve", origin: "Inconnue",race: "Majin",           episode: 232, saga: "Saga Boo",              serie: "DBZ / DBGT / DBS",      affiliation: "Majin",            image: "images/buu_innocent.jpg" },
