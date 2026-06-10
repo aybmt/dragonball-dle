@@ -1397,8 +1397,9 @@ footer {
 }
 .quote-counter span { color: var(--orange); font-weight: 700; }
 
-/* ── Champ de recherche (scopé au module citations) ── */
-#q-search-input {
+/* ── Champ de recherche (partagé modules citations + silhouette) ── */
+#q-search-input,
+#silh-search-input {
   width: 100%;
   padding: 13px 16px;
   background: var(--panel);
@@ -1413,14 +1414,18 @@ footer {
   box-shadow: var(--shadow-soft);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-#q-search-input::placeholder { color: var(--text-muted); }
-#q-search-input:focus {
+#q-search-input::placeholder,
+#silh-search-input::placeholder { color: var(--text-muted); }
+#q-search-input:focus,
+#silh-search-input:focus {
   border-color: var(--orange);
   box-shadow: 0 0 0 3px rgba(255,140,26,0.15), var(--shadow-soft);
 }
-#q-search-input:disabled { opacity: 0.55; cursor: not-allowed; }
+#q-search-input:disabled,
+#silh-search-input:disabled { opacity: 0.55; cursor: not-allowed; }
 
-#q-guess-btn {
+#q-guess-btn,
+#silh-guess-btn {
   padding: 13px 26px;
   background: var(--orange);
   border: none;
@@ -1434,17 +1439,22 @@ footer {
   transition: background 0.15s, transform 0.15s;
   white-space: nowrap;
 }
-#q-guess-btn:hover { background: #ffa540; transform: translateY(-1px); }
-#q-guess-btn:active { transform: translateY(0); }
-#q-guess-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+#q-guess-btn:hover,
+#silh-guess-btn:hover { background: #ffa540; transform: translateY(-1px); }
+#q-guess-btn:active,
+#silh-guess-btn:active { transform: translateY(0); }
+#q-guess-btn:disabled,
+#silh-guess-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 /* Suggestions : vignette + surlignage clavier */
-#q-suggestions .suggestion-item {
+#q-suggestions .suggestion-item,
+#silh-suggestions .suggestion-item {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-#q-suggestions .suggestion-item.active {
+#q-suggestions .suggestion-item.active,
+#silh-suggestions .suggestion-item.active {
   background: var(--panel-light);
   color: var(--orange);
 }
@@ -1542,6 +1552,82 @@ footer {
   font-style: italic;
 }
 
+/* ═══════════════════════════════════════════════
+   MODULE « QUI EST-CE ? » (Silhouette)
+   ═══════════════════════════════════════════════ */
+.silh-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 22px;
+}
+.silh-frame {
+  position: relative;
+  width: 280px;
+  max-width: 78vw;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 2px solid var(--border-strong);
+  background: #0a0d15;
+  box-shadow: var(--shadow-soft);
+  animation: silhIdle 3s ease-in-out infinite;
+}
+.silh-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  filter: brightness(0.16) contrast(0.5) blur(9px);
+  transition: filter 0.7s ease;
+}
+/* Vignette pour fondre les bords dans le cadre */
+.silh-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 50px 6px rgba(8,10,18,0.85);
+  border-radius: 18px;
+}
+.silh-mark {
+  position: absolute;
+  bottom: 8px; right: 12px;
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: rgba(255, 140, 26, 0.85);
+  font-family: var(--font);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+  pointer-events: none;
+  animation: silhMark 2.2s ease-in-out infinite;
+}
+.silh-frame.revealed {
+  border-color: #ffd166;
+  box-shadow: 0 0 28px rgba(255,180,40,0.5);
+  animation: none;
+}
+.silh-frame.revealed.lost {
+  border-color: var(--wrong);
+  box-shadow: 0 0 24px rgba(196,69,69,0.45);
+}
+.silh-frame.revealed .silh-vignette,
+.silh-frame.revealed .silh-mark { opacity: 0; transition: opacity 0.5s; }
+.silh-caption {
+  margin-top: 14px;
+  font-size: 0.86rem;
+  color: var(--text-dim);
+  font-style: italic;
+  text-align: center;
+}
+@keyframes silhIdle {
+  0%, 100% { box-shadow: var(--shadow-soft); }
+  50%      { box-shadow: var(--shadow-soft), 0 0 18px rgba(255,140,26,0.18); }
+}
+@keyframes silhMark {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+
 @media (max-width: 640px) {
   .modes-grid { grid-template-columns: 1fr; gap: 14px; }
   .mode-card { padding: 22px 18px 18px; }
@@ -1553,5 +1639,8 @@ footer {
   .q-speaker-mark { font-size: 2.2rem; }
   .q-speaker-fallback { font-size: 2rem; }
   #q-guess-btn { padding: 13px 18px; }
+  #silh-guess-btn { padding: 13px 18px; }
   .hint-item { padding: 8px 12px; gap: 10px; }
+  .silh-frame { width: 240px; }
+  .silh-mark { font-size: 2rem; }
 }
