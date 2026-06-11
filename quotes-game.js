@@ -138,12 +138,11 @@ const qLegendStart     = document.getElementById("legend-start");
 // ─── Hints config (icône + texte, du moins révélateur au plus révélateur) ───
 function getHints(character) {
   if (!character) return [];
-  const genderLabel = character.sex === "Homme" ? "masculin" : character.sex === "Femme" ? "féminin" : "neutre";
   return [
     { icon: "📺", label: "Série",       value: character.serie },
     { icon: "🧬", label: "Race",        value: character.race },
     { icon: "🛡️", label: "Affiliation", value: character.affiliation },
-    { icon: "⚧",  label: "Genre",       value: genderLabel },
+    { icon: "⚧",  label: "Genre",       value: character.sex },
     { icon: "🔠", label: "Initiale",    value: "« " + character.name.charAt(0).toUpperCase() + " »" }
   ];
 }
